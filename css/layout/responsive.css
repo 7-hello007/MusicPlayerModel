@@ -1,0 +1,223 @@
+/* 
+   MOBILE
+ */
+
+@media (max-width: 900px) {
+
+    :root {
+        --left-width: 100%;
+        --right-width: 100%;
+
+        --player-size:
+            min(
+                58vw,
+                390px,
+                48vh
+            );
+    }
+
+
+    body {
+        overflow: hidden;
+    }
+
+
+    .app {
+        display: block;
+
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+
+    /* =====================================================
+       PLAYER AREA
+    ===================================================== */
+
+    .player-area {
+        width: 100%;
+
+        height: 62vh;
+
+        min-height: 520px;
+    }
+
+
+    /* =====================================================
+       MUSIC SPACE
+    ===================================================== */
+
+    .music-space {
+        width: 100%;
+
+        height: 55vh;
+
+        min-height: 450px;
+
+        padding:
+            25px
+            25px
+            30px;
+
+        border-left: none;
+
+        border-top:
+            1px solid
+            rgba(255, 255, 255, 0.04);
+    }
+
+
+    /* =====================================================
+       LIBRARY
+    ===================================================== */
+
+    .library {
+        left: 25px;
+        right: 25px;
+
+        top: 110px;
+        bottom: 30px;
+    }
+
+
+    /* =====================================================
+       TRACK INFO
+    ===================================================== */
+
+    .track-info {
+        bottom: 24px;
+    }
+
+
+    /* =====================================================
+       HEADER
+    ===================================================== */
+
+    .player-header {
+        top: 22px;
+        left: 24px;
+    }
+
+
+    /* =====================================================
+       ORBIT
+    ===================================================== */
+
+    .orbit {
+        inset: -18px;
+    }
+
+
+    .progress-orbit {
+        inset: -18px;
+    }
+
+
+    .progress-ball-container {
+        inset: -18px;
+    }
+
+
+    /* =====================================================
+       PLAY BUTTON
+    ===================================================== */
+
+    .play-button {
+        width: 65px;
+        height: 65px;
+    }
+
+
+    /* =====================================================
+       TITLE
+    ===================================================== */
+
+    .track-title {
+        font-size: 18px;
+    }
+
+}
+
+
+/* 
+   SMALL MOBILE
+ */
+
+@media (max-width: 560px) {
+
+    :root {
+        --player-size:
+            min(
+                70vw,
+                310px
+            );
+    }
+
+
+    .player-area {
+        height: 61vh;
+
+        min-height: 500px;
+    }
+
+
+    .player-stage {
+        align-items: center;
+
+        padding-bottom: 35px;
+    }
+
+
+    .track-info {
+        width: 78%;
+    }
+
+
+    .space-title {
+        font-size: 22px;
+    }
+
+
+    .import-area {
+        min-height: 105px;
+    }
+
+
+    .cover {
+        width: 46px;
+        height: 46px;
+    }
+
+
+    .track {
+        min-height: 62px;
+    }
+
+}
+
+
+/* 
+   SHORT DESKTOP
+ */
+
+@media (max-height: 650px) and (min-width: 561px) {
+
+    :root {
+        --player-size:
+            min(
+                55vh,
+                440px
+            );
+    }
+
+
+    .track-info {
+        bottom: 20px;
+    }
+
+
+    .player-header {
+        top: 18px;
+    }
+
+}

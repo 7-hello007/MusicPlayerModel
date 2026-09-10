@@ -1,0 +1,27 @@
+/* 
+   NAVIGATION
+ */
+
+.navigation-zones {
+    position: absolute;
+
+    inset: 0;
+
+    z-index: 2;
+
+    display: flex;
+
+    pointer-events: none;
+}
+
+
+.navigation-zone {
+    position: relative;
+
+    width: 50%;
+    height: 100%;
+
+    pointer-events: auto;
+
+    background: transparent;
+}

@@ -1,0 +1,96 @@
+/* 
+   SONORA
+   MASTER STYLESHEET
+ */
+
+
+/* 
+   CORE
+ */
+
+@import url("./css/global/variables.css");
+@import url("./css/global/reset.css");
+
+
+/* 
+   BACKGROUND
+ */
+
+@import url("./css/background/background.css");
+
+
+/* 
+   APP
+ */
+
+@import url("./css/global/app.css");
+
+/*
+    clock
+ */
+@import url("./css/clock/clock.css");
+
+/* 
+   LEFT PLAYER
+ */
+
+@import url("./css/layout/player-area.css");
+@import url("./css/player/player-header.css");
+@import url("./css/player/navigation.css");
+@import url("./css/player/player-stage.css");
+
+
+/* 
+   PLAYER ORBIT
+ */
+
+@import url("./css/player/orbit.css");
+@import url("./css/player/progress.css");
+
+
+/* 
+   RECORD
+ */
+
+@import url("./css/player/record.css");
+@import url("./css/player/record-light.css");
+@import url("./css/player/grooves.css");
+@import url("./css/player/record-label.css");
+@import url("./css/player/play-button.css");
+@import url("./css/player/track-info.css");
+@import url("./css/player/volume.css");
+
+
+/* 
+   RIGHT MUSIC SPACE
+ */
+
+@import url("./css/layout/music-space.css");
+@import url("./css/library/header-actions.css");
+@import url("./css/library/add-button.css");
+@import url("./css/library/search.css");
+
+
+/* 
+   LIBRARY
+ */
+
+@import url("./css/layout/library.css");
+@import url("./css/library/import-area.css");
+@import url("./css/library/track-list.css");
+@import url("./css/library/equalizer.css");
+@import url("./css/library/empty.css");
+
+
+/* 
+   UI FEEDBACK
+ */
+
+@import url("./css/feedback/toast.css");
+
+
+/* 
+   RESPONSIVE
+ */
+
+@import url("./css/layout/responsive.css");

@@ -1,0 +1,51 @@
+/* 
+   CENTER LABEL
+ */
+
+.record-label {
+    position: absolute;
+
+    width: 34%;
+    height: 34%;
+
+    border-radius: 50%;
+
+    left: 33%;
+    top: 33%;
+
+    background:
+        radial-gradient(
+            circle,
+            #f2f0ff 0 5%,
+            transparent 5.5%
+        ),
+        conic-gradient(
+            from 0deg,
+            #9c78ff,
+            #ff76bb,
+            #ffae6d,
+            #71eaff,
+            #9c78ff
+        );
+
+    box-shadow:
+        0 0 45px rgba(157, 118, 255, 0.25),
+        inset 0 0 25px rgba(255, 255, 255, 0.25);
+
+    pointer-events: none;
+}
+
+
+.record-label::after {
+    content: "";
+
+    position: absolute;
+
+    inset: 8%;
+
+    border-radius: 50%;
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.3);
+}

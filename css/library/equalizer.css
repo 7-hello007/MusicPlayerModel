@@ -1,0 +1,85 @@
+/* 
+   ACTIVE EQUALIZER
+ */
+
+.equalizer {
+    display: none;
+
+    align-items: flex-end;
+
+    justify-content: center;
+
+    gap: 2px;
+
+    width: 16px;
+    height: 15px;
+}
+
+
+.track.active .equalizer {
+    display: flex;
+}
+
+
+.track.active .track-duration {
+    display: none;
+}
+
+
+/* 
+   EQ BAR
+ */
+
+.eq-bar {
+    width: 2px;
+
+    border-radius: 3px;
+
+    background:
+        rgba(255, 255, 255, 0.8);
+
+    animation:
+        eq
+        0.8s
+        ease-in-out
+        infinite
+        alternate;
+}
+
+
+.eq-bar:nth-child(1) {
+    height: 7px;
+
+    animation-delay: -0.2s;
+}
+
+
+.eq-bar:nth-child(2) {
+    height: 13px;
+
+    animation-delay: -0.5s;
+}
+
+
+.eq-bar:nth-child(3) {
+    height: 9px;
+
+    animation-delay: -0.1s;
+}
+
+
+.eq-bar:nth-child(4) {
+    height: 5px;
+
+    animation-delay: -0.35s;
+}
+
+
+@keyframes eq {
+
+    to {
+        transform:
+            scaleY(0.25);
+    }
+
+}

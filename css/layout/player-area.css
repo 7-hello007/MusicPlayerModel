@@ -1,0 +1,14 @@
+/* 
+   LEFT PLAYER AREA
+ */
+
+.player-area {
+    position: relative;
+
+    width: var(--left-width);
+    height: 100%;
+
+    min-width: 0;
+
+    overflow: hidden;
+}
