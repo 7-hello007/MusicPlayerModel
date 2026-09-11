@@ -1,0 +1,37 @@
+/* 
+   PLAYER STAGE
+ */
+
+.player-stage {
+    position: absolute;
+
+    inset: 0;
+
+    display: flex;
+
+    justify-content: center;
+    align-items: center;
+
+    pointer-events: none;
+
+    z-index: 5;
+}
+
+
+.player-system {
+    position: relative;
+
+    width: var(--player-size);
+    height: var(--player-size);
+
+    pointer-events: auto;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    touch-action: none;
+
+    z-index: 10;
+}

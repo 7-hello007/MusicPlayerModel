@@ -1,0 +1,22 @@
+/* 
+   EMPTY
+ */
+
+.empty {
+    display: none;
+
+    text-align: center;
+
+    padding: 45px 15px;
+
+    color: var(--text-dim);
+
+    font-size: 11px;
+
+    line-height: 1.8;
+}
+
+
+.empty.show {
+    display: block;
+}

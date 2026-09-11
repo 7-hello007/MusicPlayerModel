@@ -1,0 +1,1873 @@
+:root {
+    --bg: #07070b;
+    --bg-soft: #0d0d13;
+    --panel: rgba(20, 20, 28, 0.66);
+    --panel-strong: rgba(25, 25, 34, 0.86);
+
+    --text: #f7f7fb;
+    --text-soft: rgba(247, 247, 251, 0.62);
+    --text-dim: rgba(247, 247, 251, 0.36);
+
+    --purple: #a879ff;
+    --pink: #ff72bd;
+    --cyan: #67e8ff;
+    --orange: #ffae68;
+
+    --border: rgba(255,255,255,0.09);
+
+    --left-width: 56%;
+    --right-width: 44%;
+
+    --player-size: min(68vh, 640px, 72vw);
+}
+
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+
+    background: var(--bg);
+    color: var(--text);
+
+    font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        Helvetica,
+        Arial,
+        sans-serif;
+}
+
+
+body {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+
+button,
+input {
+    font: inherit;
+}
+
+
+/* =========================================================
+   BACKGROUND
+========================================================= */
+
+.background {
+    position: fixed;
+    inset: 0;
+
+    overflow: hidden;
+
+    pointer-events: none;
+
+    background:
+        radial-gradient(
+            circle at 28% 45%,
+            rgba(126, 77, 255, 0.11),
+            transparent 34%
+        ),
+        radial-gradient(
+            circle at 80% 30%,
+            rgba(255, 83, 170, 0.07),
+            transparent 32%
+        ),
+        #07070b;
+}
+
+
+.ambient {
+    position: absolute;
+
+    width: 520px;
+    height: 520px;
+
+    border-radius: 50%;
+
+    filter: blur(100px);
+
+    opacity: 0.13;
+
+    animation:
+        ambientFloat
+        18s
+        ease-in-out
+        infinite
+        alternate;
+}
+
+
+.ambient.one {
+    left: -160px;
+    top: 25%;
+
+    background: #7445ff;
+}
+
+
+.ambient.two {
+    right: 5%;
+    top: -180px;
+
+    background: #ff4fa9;
+
+    animation-delay: -6s;
+}
+
+
+.ambient.three {
+    right: 15%;
+    bottom: -220px;
+
+    background: #44dfff;
+
+    animation-delay: -11s;
+}
+
+
+@keyframes ambientFloat {
+
+    0% {
+        transform:
+            translate3d(0,0,0)
+            scale(1);
+    }
+
+    50% {
+        transform:
+            translate3d(50px,-35px,0)
+            scale(1.12);
+    }
+
+    100% {
+        transform:
+            translate3d(-30px,45px,0)
+            scale(0.94);
+    }
+
+}
+
+
+#particleCanvas {
+    position: fixed;
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    pointer-events: none;
+
+    opacity: 0.7;
+}
+
+
+/* =========================================================
+   APP
+========================================================= */
+
+.app {
+    position: relative;
+
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+
+    overflow: hidden;
+}
+
+
+/* =========================================================
+   LEFT PLAYER AREA
+========================================================= */
+
+.player-area {
+    position: relative;
+
+    width: var(--left-width);
+    height: 100%;
+
+    min-width: 0;
+
+    overflow: hidden;
+}
+
+
+.player-header {
+    position: absolute;
+
+    z-index: 20;
+
+    top: 30px;
+    left: 38px;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+}
+
+
+.logo-mark {
+    width: 30px;
+    height: 30px;
+
+    border-radius: 50%;
+
+    background:
+        conic-gradient(
+            from 0deg,
+            var(--purple),
+            var(--pink),
+            var(--cyan),
+            var(--purple)
+        );
+
+    box-shadow:
+        0 0 25px rgba(168,121,255,0.35);
+
+    animation:
+        logoSpin
+        8s
+        linear
+        infinite;
+}
+
+
+@keyframes logoSpin {
+
+    to {
+        transform: rotate(360deg);
+    }
+
+}
+
+
+.logo-text {
+    font-size: 14px;
+
+    font-weight: 700;
+
+    letter-spacing: 0.26em;
+}
+
+
+.logo-sub {
+    font-size: 10px;
+
+    color: var(--text-dim);
+
+    letter-spacing: 0.12em;
+
+    margin-top: 2px;
+}
+
+
+/* =========================================================
+   NAVIGATION
+========================================================= */
+
+.navigation-zones {
+    position: absolute;
+
+    inset: 0;
+
+    z-index: 2;
+
+    display: flex;
+
+    pointer-events: none;
+}
+
+
+.navigation-zone {
+    position: relative;
+
+    width: 50%;
+    height: 100%;
+
+    pointer-events: auto;
+
+    background: transparent;
+}
+
+
+/* =========================================================
+   PLAYER STAGE
+========================================================= */
+
+.player-stage {
+    position: absolute;
+
+    inset: 0;
+
+    display: flex;
+
+    justify-content: center;
+    align-items: center;
+
+    pointer-events: none;
+
+    z-index: 5;
+}
+
+
+.player-system {
+    position: relative;
+
+    width: var(--player-size);
+    height: var(--player-size);
+
+    pointer-events: auto;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    touch-action: none;
+
+    z-index: 10;
+}
+
+
+/* =========================================================
+   OUTER ORBIT
+========================================================= */
+
+.orbit {
+    position: absolute;
+
+    inset: -24px;
+
+    border-radius: 50%;
+
+    border:
+        1px solid
+        rgba(255,255,255,0.065);
+
+    box-shadow:
+        0 0 40px rgba(143, 97, 255, 0.05),
+        inset 0 0 40px rgba(255,255,255,0.015);
+
+    pointer-events: none;
+}
+
+
+.orbit::before {
+    content: "";
+
+    position: absolute;
+
+    inset: 11px;
+
+    border-radius: 50%;
+
+    border:
+        1px dashed
+        rgba(255,255,255,0.045);
+
+    animation:
+        orbitDash
+        18s
+        linear
+        infinite;
+}
+
+
+@keyframes orbitDash {
+
+    to {
+        transform: rotate(360deg);
+    }
+
+}
+
+
+/* =========================================================
+   PROGRESS TRACK
+========================================================= */
+
+.progress-orbit {
+    position: absolute;
+
+    /*
+     * 和 progress-ball-container 完全相同。
+     *
+     * 因此小球轨迹和进度条轨迹完全重合。
+     */
+    inset: -24px;
+
+    border-radius: 50%;
+
+    pointer-events: none;
+
+    /*
+     * 重要：
+     *
+     * conic-gradient 默认 0deg 就是在正上方。
+     *
+     * 原来的 from -90deg 会让起点跑到左侧。
+     *
+     * 现在删除 from -90deg。
+     */
+    background:
+        conic-gradient(
+            rgba(255,255,255,0.22) 0deg,
+            rgba(255,255,255,0.22)
+                calc(var(--progress, 0) * 360deg),
+            rgba(255,255,255,0.025)
+                calc(var(--progress, 0) * 360deg),
+            rgba(255,255,255,0.025) 360deg
+        );
+
+    -webkit-mask:
+        radial-gradient(
+            farthest-side,
+            transparent calc(100% - 2px),
+            #000 calc(100% - 1px)
+        );
+
+    mask:
+        radial-gradient(
+            farthest-side,
+            transparent calc(100% - 2px),
+            #000 calc(100% - 1px)
+        );
+
+    opacity: 0.7;
+}
+
+
+/* =========================================================
+   PROGRESS BALL
+========================================================= */
+
+.progress-ball-container {
+    position: absolute;
+
+    /*
+     * 必须和 progress-orbit 完全一致。
+     *
+     * 这样：
+     *
+     * 进度条半径
+     * =
+     * 小球运动半径
+     */
+    inset: -24px;
+
+    border-radius: 50%;
+
+    pointer-events: none;
+
+    /*
+     * JS 每一帧更新这个角度。
+     */
+    transform:
+        rotate(var(--progress-angle, 0deg));
+
+    will-change: transform;
+}
+
+
+.progress-ball {
+    position: absolute;
+
+    left: 50%;
+    top: 0;
+
+    width: 11px;
+    height: 11px;
+
+    margin-left: -5.5px;
+
+    border-radius: 50%;
+
+    background: white;
+
+    box-shadow:
+        0 0 8px rgba(255,255,255,0.95),
+        0 0 20px rgba(168,121,255,0.85),
+        0 0 45px rgba(168,121,255,0.45);
+
+    /*
+     * 删除原来的 transition。
+     *
+     * 原来的：
+     *
+     * transition: transform 0.08s linear;
+     *
+     * 会和 JS 的更新产生不必要的延迟。
+     *
+     * 现在直接由 RAF 连续更新。
+     */
+    transition: none;
+
+    will-change: transform;
+}
+
+
+.progress-ball::after {
+    content: "";
+
+    position: absolute;
+
+    inset: -5px;
+
+    border-radius: 50%;
+
+    border:
+        1px solid
+        rgba(255,255,255,0.18);
+}
+
+
+/* =========================================================
+   ROTATING VINYL
+========================================================= */
+
+.record {
+    position: relative;
+
+    width: 100%;
+    height: 100%;
+
+    border-radius: 50%;
+
+    cursor: grab;
+
+    overflow: hidden;
+
+    background:
+        radial-gradient(
+            circle at 50% 50%,
+            #0e0e13 0 4%,
+            #19191f 4.2% 5.2%,
+            #09090d 5.5% 8%,
+            transparent 8.3%
+        ),
+        repeating-radial-gradient(
+            circle at 50% 50%,
+            rgba(255,255,255,0.075) 0px,
+            rgba(255,255,255,0.075) 1px,
+            rgba(0,0,0,0) 2px,
+            rgba(0,0,0,0) 5px
+        ),
+        conic-gradient(
+            from 0deg,
+            #121219,
+            #24202e,
+            #101017,
+            #20192b,
+            #0b0b10,
+            #282033,
+            #101016,
+            #121219
+        );
+
+    box-shadow:
+        0 0 0 1px rgba(255,255,255,0.09),
+        0 25px 100px rgba(0,0,0,0.6),
+        0 0 90px rgba(135,83,255,0.13);
+
+    will-change: transform;
+
+    touch-action: none;
+
+    animation: none !important;
+}
+
+
+.record.dragging {
+    cursor: grabbing;
+}
+
+
+/* =========================================================
+   VINYL LIGHT
+========================================================= */
+
+.record-light {
+    position: absolute;
+
+    inset: 8%;
+
+    border-radius: 50%;
+
+    background:
+        conic-gradient(
+            from 0deg,
+            transparent 0deg,
+            rgba(157,118,255,0.20) 30deg,
+            transparent 70deg,
+            transparent 140deg,
+            rgba(255,105,190,0.16) 190deg,
+            transparent 240deg,
+            transparent 310deg,
+            rgba(100,225,255,0.14) 345deg,
+            transparent 360deg
+        );
+
+    filter: blur(8px);
+
+    pointer-events: none;
+
+    mix-blend-mode: screen;
+}
+
+
+/* =========================================================
+   RECORD GROOVES
+========================================================= */
+
+.grooves {
+    position: absolute;
+
+    inset: 12%;
+
+    border-radius: 50%;
+
+    background:
+        repeating-radial-gradient(
+            circle,
+            transparent 0px,
+            transparent 5px,
+            rgba(255,255,255,0.025) 6px,
+            transparent 7px
+        );
+
+    opacity: 0.8;
+
+    pointer-events: none;
+}
+
+
+/* =========================================================
+   CENTER LABEL
+========================================================= */
+
+.record-label {
+    position: absolute;
+
+    width: 34%;
+    height: 34%;
+
+    border-radius: 50%;
+
+    left: 33%;
+    top: 33%;
+
+    background:
+        radial-gradient(
+            circle,
+            #f2f0ff 0 5%,
+            transparent 5.5%
+        ),
+        conic-gradient(
+            from 0deg,
+            #9c78ff,
+            #ff76bb,
+            #ffae6d,
+            #71eaff,
+            #9c78ff
+        );
+
+    box-shadow:
+        0 0 45px rgba(157,118,255,0.25),
+        inset 0 0 25px rgba(255,255,255,0.25);
+
+    pointer-events: none;
+}
+
+
+.record-label::after {
+    content: "";
+
+    position: absolute;
+
+    inset: 8%;
+
+    border-radius: 50%;
+
+    border:
+        1px solid
+        rgba(255,255,255,0.3);
+}
+
+
+/* =========================================================
+   PLAY BUTTON
+========================================================= */
+
+.play-button {
+    position: absolute;
+
+    left: 50%;
+    top: 50%;
+
+    transform:
+        translate(-50%, -50%);
+
+    width: 78px;
+    height: 78px;
+
+    border:
+        1px solid
+        rgba(255,255,255,0.22);
+
+    border-radius: 50%;
+
+    background:
+        rgba(8,8,12,0.64);
+
+    backdrop-filter: blur(15px);
+
+    -webkit-backdrop-filter: blur(15px);
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    color: white;
+
+    pointer-events: none;
+
+    box-shadow:
+        0 0 30px rgba(0,0,0,0.35),
+        inset 0 0 20px rgba(255,255,255,0.035);
+}
+
+
+.play-icon {
+    width: 0;
+    height: 0;
+
+    border-top:
+        10px solid transparent;
+
+    border-bottom:
+        10px solid transparent;
+
+    border-left:
+        15px solid white;
+
+    margin-left: 4px;
+
+    transition: 0.25s ease;
+}
+
+
+.playing .play-icon {
+    width: 14px;
+    height: 20px;
+
+    border: none;
+
+    margin-left: 0;
+
+    background:
+        linear-gradient(
+            90deg,
+            white 0 35%,
+            transparent 35% 65%,
+            white 65% 100%
+        );
+}
+
+
+/* =========================================================
+   TRACK INFO
+========================================================= */
+
+.track-info {
+    position: absolute;
+
+    z-index: 10;
+
+    left: 50%;
+    bottom: 55px;
+
+    transform: translateX(-50%);
+
+    width: min(440px, 75%);
+
+    text-align: center;
+
+    pointer-events: none;
+}
+
+
+.track-status {
+    font-size: 9px;
+
+    color: var(--text-dim);
+
+    letter-spacing: 0.25em;
+
+    margin-bottom: 9px;
+
+    text-transform: uppercase;
+}
+
+
+.track-title {
+    font-size:
+        clamp(18px, 2vw, 27px);
+
+    font-weight: 600;
+
+    letter-spacing: -0.02em;
+
+    white-space: nowrap;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+}
+
+
+.track-artist {
+    margin-top: 7px;
+
+    font-size: 12px;
+
+    color: var(--text-soft);
+
+    white-space: nowrap;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+}
+
+
+/*
+ * 时间区域已经不再显示。
+ *
+ * JS 仍然保留音频时间计算。
+ */
+
+
+/* =========================================================
+   RIGHT MUSIC SPACE
+========================================================= */
+
+.music-space {
+    position: relative;
+
+    width: var(--right-width);
+    height: 100%;
+
+    padding:
+        34px
+        38px
+        34px
+        25px;
+
+    overflow: hidden;
+
+    border-left:
+        1px solid
+        rgba(255,255,255,0.04);
+}
+
+
+.space-header {
+    position: relative;
+
+    height: 72px;
+
+    display: flex;
+
+    align-items: flex-start;
+
+    justify-content: space-between;
+
+    z-index: 10;
+}
+
+
+.space-title {
+    font-size: 25px;
+
+    font-weight: 650;
+
+    letter-spacing: -0.04em;
+}
+
+
+.space-description {
+    margin-top: 5px;
+
+    font-size: 10px;
+
+    color: var(--text-dim);
+
+    letter-spacing: 0.08em;
+}
+
+
+/* =========================================================
+   HEADER ACTIONS
+========================================================= */
+
+.header-actions {
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+}
+
+
+/* =========================================================
+   ADD BUTTON
+========================================================= */
+
+.add-button {
+    width: 42px;
+    height: 42px;
+
+    border-radius: 50%;
+
+    border:
+        1px solid
+        var(--border);
+
+    background:
+        rgba(255,255,255,0.035);
+
+    color: var(--text-soft);
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    cursor: pointer;
+
+    transition: 0.25s ease;
+}
+
+
+.add-button:hover {
+    background:
+        rgba(255,255,255,0.08);
+
+    color: white;
+
+    transform: scale(1.05);
+}
+
+
+.add-icon {
+    position: relative;
+
+    width: 16px;
+    height: 16px;
+}
+
+
+.add-icon::before,
+.add-icon::after {
+    content: "";
+
+    position: absolute;
+
+    background: currentColor;
+
+    border-radius: 2px;
+}
+
+
+.add-icon::before {
+    width: 14px;
+    height: 1.5px;
+
+    left: 1px;
+    top: 7px;
+}
+
+
+.add-icon::after {
+    width: 1.5px;
+    height: 14px;
+
+    left: 7px;
+    top: 1px;
+}
+
+
+/* =========================================================
+   SEARCH
+========================================================= */
+
+.search-button {
+    width: 42px;
+    height: 42px;
+
+    border-radius: 50%;
+
+    border:
+        1px solid
+        var(--border);
+
+    background:
+        rgba(255,255,255,0.035);
+
+    color: var(--text-soft);
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    cursor: pointer;
+
+    transition: 0.25s ease;
+}
+
+
+.search-button:hover {
+    background:
+        rgba(255,255,255,0.08);
+
+    color: white;
+
+    transform: scale(1.05);
+}
+
+
+.search-icon {
+    width: 16px;
+    height: 16px;
+
+    border:
+        1.5px solid
+        currentColor;
+
+    border-radius: 50%;
+
+    position: relative;
+}
+
+
+.search-icon::after {
+    content: "";
+
+    position: absolute;
+
+    width: 7px;
+    height: 1.5px;
+
+    background: currentColor;
+
+    right: -5px;
+    bottom: -2px;
+
+    transform: rotate(45deg);
+
+    border-radius: 2px;
+}
+
+
+.search-box {
+    position: absolute;
+
+    top: 48px;
+    right: 0;
+
+    width:
+        min(300px, 80vw);
+
+    padding: 10px;
+
+    border-radius: 15px;
+
+    background:
+        rgba(20,20,27,0.94);
+
+    border:
+        1px solid
+        var(--border);
+
+    backdrop-filter: blur(30px);
+
+    -webkit-backdrop-filter: blur(30px);
+
+    opacity: 0;
+
+    pointer-events: none;
+
+    transform:
+        translateY(-8px)
+        scale(0.98);
+
+    transition: 0.2s ease;
+}
+
+
+.search-box.open {
+    opacity: 1;
+
+    pointer-events: auto;
+
+    transform:
+        translateY(0)
+        scale(1);
+}
+
+
+.search-input {
+    width: 100%;
+
+    height: 38px;
+
+    border: none;
+    outline: none;
+
+    border-radius: 10px;
+
+    padding: 0 12px;
+
+    background:
+        rgba(255,255,255,0.055);
+
+    color: white;
+
+    font-size: 12px;
+}
+
+
+.search-input::placeholder {
+    color:
+        rgba(255,255,255,0.32);
+}
+
+
+/* =========================================================
+   LIBRARY
+========================================================= */
+
+.library {
+    position: absolute;
+
+    left: 25px;
+    right: 38px;
+
+    top: 125px;
+    bottom: 34px;
+
+    overflow-y: auto;
+
+    padding-right: 5px;
+}
+
+
+.library::-webkit-scrollbar {
+    width: 4px;
+}
+
+
+.library::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+
+.library::-webkit-scrollbar-thumb {
+    background:
+        rgba(255,255,255,0.09);
+
+    border-radius: 20px;
+}
+
+
+/* =========================================================
+   IMPORT
+========================================================= */
+
+.import-area {
+    position: relative;
+
+    min-height: 120px;
+
+    border-radius: 20px;
+
+    border:
+        1px dashed
+        rgba(255,255,255,0.11);
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(255,255,255,0.035),
+            rgba(255,255,255,0.015)
+        );
+
+    display: flex;
+
+    flex-direction: column;
+
+    justify-content: center;
+    align-items: center;
+
+    cursor: pointer;
+
+    transition: 0.25s ease;
+
+    margin-bottom: 22px;
+
+    overflow: hidden;
+}
+
+
+.import-area::before {
+    content: "";
+
+    position: absolute;
+
+    width: 180px;
+    height: 180px;
+
+    border-radius: 50%;
+
+    background:
+        rgba(156,120,255,0.08);
+
+    filter: blur(35px);
+
+    transform:
+        translate(-50%, -50%);
+
+    left: 20%;
+    top: 50%;
+}
+
+
+.import-area:hover,
+.import-area.dragging {
+    border-color:
+        rgba(168,121,255,0.38);
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(168,121,255,0.09),
+            rgba(255,255,255,0.025)
+        );
+}
+
+
+.import-symbol {
+    position: relative;
+
+    width: 36px;
+    height: 36px;
+
+    border-radius: 50%;
+
+    border:
+        1px solid
+        rgba(255,255,255,0.15);
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    margin-bottom: 10px;
+}
+
+
+.import-symbol::before {
+    content: "";
+
+    position: absolute;
+
+    width: 14px;
+    height: 2px;
+
+    background:
+        rgba(255,255,255,0.7);
+
+    border-radius: 4px;
+}
+
+
+.import-symbol::after {
+    content: "";
+
+    position: absolute;
+
+    width: 2px;
+    height: 14px;
+
+    background:
+        rgba(255,255,255,0.7);
+
+    border-radius: 4px;
+}
+
+
+.import-title {
+    position: relative;
+
+    font-size: 12px;
+
+    color:
+        rgba(255,255,255,0.75);
+}
+
+
+.import-sub {
+    position: relative;
+
+    margin-top: 4px;
+
+    font-size: 9px;
+
+    color: var(--text-dim);
+}
+
+
+/* =========================================================
+   LIBRARY HEADER
+========================================================= */
+
+.library-heading {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    margin-bottom: 12px;
+}
+
+
+.library-heading span:first-child {
+    font-size: 10px;
+
+    color: var(--text-soft);
+
+    letter-spacing: 0.18em;
+
+    text-transform: uppercase;
+}
+
+
+.track-count {
+    font-size: 9px;
+
+    color: var(--text-dim);
+}
+
+
+/* =========================================================
+   TRACK LIST
+========================================================= */
+
+.track-list {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 7px;
+
+    padding-bottom: 30px;
+}
+
+
+.track {
+    position: relative;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    min-height: 67px;
+
+    padding: 8px 10px;
+
+    border-radius: 15px;
+
+    border: 1px solid transparent;
+
+    background: transparent;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.2s ease;
+}
+
+
+.track:hover {
+    background:
+        rgba(255,255,255,0.035);
+
+    border-color:
+        rgba(255,255,255,0.055);
+
+    transform:
+        translateX(3px);
+}
+
+
+.track.active {
+    background:
+        linear-gradient(
+            100deg,
+            rgba(168,121,255,0.11),
+            rgba(255,255,255,0.025)
+        );
+
+    border-color:
+        rgba(168,121,255,0.14);
+}
+
+
+.cover {
+    position: relative;
+
+    width: 50px;
+    height: 50px;
+
+    flex-shrink: 0;
+
+    border-radius: 12px;
+
+    overflow: hidden;
+
+    background:
+        radial-gradient(
+            circle at 30% 30%,
+            rgba(255,255,255,0.4),
+            transparent 20%
+        ),
+        var(--cover);
+
+    box-shadow:
+        0 8px 20px rgba(0,0,0,0.22);
+}
+
+
+.cover::after {
+    content: "";
+
+    position: absolute;
+
+    inset: 0;
+
+    background:
+        radial-gradient(
+            circle at 70% 20%,
+            rgba(255,255,255,0.25),
+            transparent 24%
+        );
+
+    mix-blend-mode: screen;
+}
+
+
+.track-info-small {
+    min-width: 0;
+
+    flex: 1;
+}
+
+
+.track-name {
+    font-size: 12px;
+
+    font-weight: 500;
+
+    white-space: nowrap;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+}
+
+
+.track-artist-small {
+    margin-top: 4px;
+
+    font-size: 9px;
+
+    color: var(--text-dim);
+
+    white-space: nowrap;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+}
+
+
+.track-duration {
+    flex-shrink: 0;
+
+    font-size: 9px;
+
+    color: var(--text-dim);
+
+    font-variant-numeric: tabular-nums;
+}
+
+
+/* =========================================================
+   ACTIVE EQUALIZER
+========================================================= */
+
+.equalizer {
+    display: none;
+
+    align-items: flex-end;
+
+    justify-content: center;
+
+    gap: 2px;
+
+    width: 16px;
+    height: 15px;
+}
+
+
+.track.active .equalizer {
+    display: flex;
+}
+
+
+.track.active .track-duration {
+    display: none;
+}
+
+
+.eq-bar {
+    width: 2px;
+
+    border-radius: 3px;
+
+    background:
+        rgba(255,255,255,0.8);
+
+    animation:
+        eq
+        0.8s
+        ease-in-out
+        infinite
+        alternate;
+}
+
+
+.eq-bar:nth-child(1) {
+    height: 7px;
+    animation-delay: -0.2s;
+}
+
+
+.eq-bar:nth-child(2) {
+    height: 13px;
+    animation-delay: -0.5s;
+}
+
+
+.eq-bar:nth-child(3) {
+    height: 9px;
+    animation-delay: -0.1s;
+}
+
+
+.eq-bar:nth-child(4) {
+    height: 5px;
+    animation-delay: -0.35s;
+}
+
+
+@keyframes eq {
+
+    to {
+        transform: scaleY(0.25);
+    }
+
+}
+
+
+/* =========================================================
+   EMPTY
+========================================================= */
+
+.empty {
+    display: none;
+
+    text-align: center;
+
+    padding: 45px 15px;
+
+    color: var(--text-dim);
+
+    font-size: 11px;
+
+    line-height: 1.8;
+}
+
+
+.empty.show {
+    display: block;
+}
+
+
+/* =========================================================
+   TOAST
+========================================================= */
+
+.toast {
+    position: fixed;
+
+    z-index: 100;
+
+    left: 50%;
+    bottom: 25px;
+
+    transform:
+        translate(-50%, 20px)
+        scale(0.96);
+
+    padding: 10px 15px;
+
+    border-radius: 999px;
+
+    background:
+        rgba(22,22,29,0.88);
+
+    border:
+        1px solid
+        rgba(255,255,255,0.09);
+
+    backdrop-filter: blur(20px);
+
+    -webkit-backdrop-filter: blur(20px);
+
+    color:
+        rgba(255,255,255,0.8);
+
+    font-size: 10px;
+
+    opacity: 0;
+
+    pointer-events: none;
+
+    transition: 0.25s ease;
+}
+
+
+.toast.show {
+    opacity: 1;
+
+    transform:
+        translate(-50%, 0)
+        scale(1);
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 900px) {
+
+    :root {
+        --left-width: 100%;
+        --right-width: 100%;
+
+        --player-size:
+            min(
+                58vw,
+                390px,
+                48vh
+            );
+    }
+
+
+    body {
+        overflow: hidden;
+    }
+
+
+    .app {
+        display: block;
+
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+
+    .player-area {
+        width: 100%;
+        height: 62vh;
+
+        min-height: 520px;
+    }
+
+
+    .music-space {
+        width: 100%;
+        height: 55vh;
+
+        min-height: 450px;
+
+        padding:
+            25px
+            25px
+            30px;
+    }
+
+
+    .music-space {
+        border-left: none;
+
+        border-top:
+            1px solid
+            rgba(255,255,255,0.04);
+    }
+
+
+    .library {
+        left: 25px;
+        right: 25px;
+
+        top: 110px;
+        bottom: 30px;
+    }
+
+
+    .track-info {
+        bottom: 24px;
+    }
+
+
+    .player-header {
+        top: 22px;
+        left: 24px;
+    }
+
+
+    .orbit {
+        inset: -18px;
+    }
+
+
+    .progress-orbit {
+        inset: -18px;
+    }
+
+
+    /*
+     * 小球轨道必须和 progress-orbit 完全一致。
+     */
+    .progress-ball-container {
+        inset: -18px;
+    }
+
+
+    .play-button {
+        width: 65px;
+        height: 65px;
+    }
+
+
+    .track-title {
+        font-size: 18px;
+    }
+
+}
+
+
+@media (max-width: 560px) {
+
+    :root {
+        --player-size:
+            min(70vw, 310px);
+    }
+
+
+    .player-area {
+        height: 61vh;
+        min-height: 500px;
+    }
+
+
+    .player-stage {
+        align-items: center;
+
+        padding-bottom: 35px;
+    }
+
+
+    .track-info {
+        width: 78%;
+    }
+
+
+    .space-title {
+        font-size: 22px;
+    }
+
+
+    .import-area {
+        min-height: 105px;
+    }
+
+
+    .cover {
+        width: 46px;
+        height: 46px;
+    }
+
+
+    .track {
+        min-height: 62px;
+    }
+
+}
+
+
+@media (max-height: 650px) and (min-width: 561px) {
+
+    :root {
+        --player-size:
+            min(55vh, 440px);
+    }
+
+
+    .track-info {
+        bottom: 20px;
+    }
+
+
+    .player-header {
+        top: 18px;
+    }
+
+}

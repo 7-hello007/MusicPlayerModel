@@ -1,0 +1,204 @@
+/* 
+   LIBRARY HEADER
+ */
+
+.library-heading {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    margin-bottom: 12px;
+}
+
+
+.library-heading span:first-child {
+    font-size: 10px;
+
+    color: var(--text-soft);
+
+    letter-spacing: 0.18em;
+
+    text-transform: uppercase;
+}
+
+
+.track-count {
+    font-size: 9px;
+
+    color: var(--text-dim);
+}
+
+
+/* 
+   TRACK LIST
+ */
+
+.track-list {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 7px;
+
+    padding-bottom: 30px;
+}
+
+
+/* 
+   TRACK
+ */
+
+.track {
+    position: relative;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    min-height: 67px;
+
+    padding: 8px 10px;
+
+    border-radius: 15px;
+
+    border: 1px solid transparent;
+
+    background: transparent;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.2s ease;
+}
+
+
+.track:hover {
+    background:
+        rgba(255, 255, 255, 0.035);
+
+    border-color:
+        rgba(255, 255, 255, 0.055);
+
+    transform:
+        translateX(3px);
+}
+
+
+.track.active {
+    background:
+        linear-gradient(
+            100deg,
+            rgba(168, 121, 255, 0.11),
+            rgba(255, 255, 255, 0.025)
+        );
+
+    border-color:
+        rgba(168, 121, 255, 0.14);
+}
+
+
+/* 
+   COVER
+ */
+
+.cover {
+    position: relative;
+
+    width: 50px;
+    height: 50px;
+
+    flex-shrink: 0;
+
+    border-radius: 12px;
+
+    overflow: hidden;
+
+    background:
+        radial-gradient(
+            circle at 30% 30%,
+            rgba(255, 255, 255, 0.4),
+            transparent 20%
+        ),
+        var(--cover);
+
+    box-shadow:
+        0 8px 20px rgba(0, 0, 0, 0.22);
+}
+
+
+.cover::after {
+    content: "";
+
+    position: absolute;
+
+    inset: 0;
+
+    background:
+        radial-gradient(
+            circle at 70% 20%,
+            rgba(255, 255, 255, 0.25),
+            transparent 24%
+        );
+
+    mix-blend-mode: screen;
+}
+
+
+/* 
+   TRACK INFO SMALL
+ */
+
+.track-info-small {
+    min-width: 0;
+
+    flex: 1;
+}
+
+
+.track-name {
+    font-size: 12px;
+
+    font-weight: 500;
+
+    white-space: nowrap;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+}
+
+
+.track-artist-small {
+    margin-top: 4px;
+
+    font-size: 9px;
+
+    color: var(--text-dim);
+
+    white-space: nowrap;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+}
+
+
+/* 
+   TRACK DURATION
+ */
+
+.track-duration {
+    flex-shrink: 0;
+
+    font-size: 9px;
+
+    color: var(--text-dim);
+
+    font-variant-numeric: tabular-nums;
+}

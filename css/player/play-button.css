@@ -1,0 +1,87 @@
+/* 
+   PLAY BUTTON
+ */
+
+.play-button {
+    position: absolute;
+
+    left: 50%;
+    top: 50%;
+
+    transform:
+        translate(-50%, -50%);
+
+    width: 78px;
+    height: 78px;
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.22);
+
+    border-radius: 50%;
+
+    background:
+        rgba(8, 8, 12, 0.64);
+
+    backdrop-filter: blur(15px);
+
+    -webkit-backdrop-filter: blur(15px);
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    color: white;
+
+    pointer-events: none;
+
+    box-shadow:
+        0 0 30px rgba(0, 0, 0, 0.35),
+        inset 0 0 20px rgba(255, 255, 255, 0.035);
+}
+
+
+/* 
+   PLAY ICON
+ */
+
+.play-icon {
+    width: 0;
+    height: 0;
+
+    border-top:
+        10px solid transparent;
+
+    border-bottom:
+        10px solid transparent;
+
+    border-left:
+        15px solid white;
+
+    margin-left: 4px;
+
+    transition: 0.25s ease;
+}
+
+
+/* 
+   PAUSE ICON
+ */
+
+.playing .play-icon {
+    width: 14px;
+    height: 20px;
+
+    border: none;
+
+    margin-left: 0;
+
+    background:
+        linear-gradient(
+            90deg,
+            white 0 35%,
+            transparent 35% 65%,
+            white 65% 100%
+        );
+}

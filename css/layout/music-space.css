@@ -1,0 +1,61 @@
+/* 
+   RIGHT MUSIC SPACE
+ */
+
+.music-space {
+    position: relative;
+
+    width: var(--right-width);
+    height: 100%;
+
+    padding:
+        34px
+        38px
+        34px
+        25px;
+
+    overflow: hidden;
+
+    border-left:
+        1px solid
+        rgba(255, 255, 255, 0.04);
+}
+
+
+/* 
+   SPACE HEADER
+ */
+
+.space-header {
+    position: relative;
+
+    height: 72px;
+
+    display: flex;
+
+    align-items: flex-start;
+
+    justify-content: space-between;
+
+    z-index: 10;
+}
+
+
+.space-title {
+    font-size: 25px;
+
+    font-weight: 650;
+
+    letter-spacing: -0.04em;
+}
+
+
+.space-description {
+    margin-top: 5px;
+
+    font-size: 10px;
+
+    color: var(--text-dim);
+
+    letter-spacing: 0.08em;
+}

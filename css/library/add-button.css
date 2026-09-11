@@ -1,0 +1,81 @@
+/* 
+   ADD BUTTON
+ */
+
+.add-button {
+    width: 42px;
+    height: 42px;
+
+    border-radius: 50%;
+
+    border:
+        1px solid
+        var(--border);
+
+    background:
+        rgba(255, 255, 255, 0.035);
+
+    color: var(--text-soft);
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    cursor: pointer;
+
+    transition: 0.25s ease;
+}
+
+
+.add-button:hover {
+    background:
+        rgba(255, 255, 255, 0.08);
+
+    color: white;
+
+    transform: scale(1.05);
+}
+
+
+/* 
+   ADD ICON
+ */
+
+.add-icon {
+    position: relative;
+
+    width: 16px;
+    height: 16px;
+}
+
+
+.add-icon::before,
+.add-icon::after {
+    content: "";
+
+    position: absolute;
+
+    background:
+        currentColor;
+
+    border-radius: 2px;
+}
+
+
+.add-icon::before {
+    width: 14px;
+    height: 1.5px;
+
+    left: 1px;
+    top: 7px;
+}
+
+
+.add-icon::after {
+    width: 1.5px;
+    height: 14px;
+
+    left: 7px;
+    top: 1px;
+}

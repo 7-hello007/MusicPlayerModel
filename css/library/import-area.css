@@ -1,0 +1,154 @@
+/* 
+   IMPORT
+ */
+
+.import-area {
+    position: relative;
+
+    min-height: 120px;
+
+    border-radius: 20px;
+
+    border:
+        1px dashed
+        rgba(255, 255, 255, 0.11);
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(255, 255, 255, 0.035),
+            rgba(255, 255, 255, 0.015)
+        );
+
+    display: flex;
+
+    flex-direction: column;
+
+    justify-content: center;
+    align-items: center;
+
+    cursor: pointer;
+
+    transition: 0.25s ease;
+
+    margin-bottom: 22px;
+
+    overflow: hidden;
+}
+
+
+.import-area::before {
+    content: "";
+
+    position: absolute;
+
+    width: 180px;
+    height: 180px;
+
+    border-radius: 50%;
+
+    background:
+        rgba(156, 120, 255, 0.08);
+
+    filter: blur(35px);
+
+    transform:
+        translate(-50%, -50%);
+
+    left: 20%;
+    top: 50%;
+}
+
+
+.import-area:hover,
+.import-area.dragging {
+    border-color:
+        rgba(168, 121, 255, 0.38);
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(168, 121, 255, 0.09),
+            rgba(255, 255, 255, 0.025)
+        );
+}
+
+
+/* 
+   IMPORT SYMBOL
+ */
+
+.import-symbol {
+    position: relative;
+
+    width: 36px;
+    height: 36px;
+
+    border-radius: 50%;
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.15);
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    margin-bottom: 10px;
+}
+
+
+.import-symbol::before {
+    content: "";
+
+    position: absolute;
+
+    width: 14px;
+    height: 2px;
+
+    background:
+        rgba(255, 255, 255, 0.7);
+
+    border-radius: 4px;
+}
+
+
+.import-symbol::after {
+    content: "";
+
+    position: absolute;
+
+    width: 2px;
+    height: 14px;
+
+    background:
+        rgba(255, 255, 255, 0.7);
+
+    border-radius: 4px;
+}
+
+
+/* 
+   IMPORT TEXT
+ */
+
+.import-title {
+    position: relative;
+
+    font-size: 12px;
+
+    color:
+        rgba(255, 255, 255, 0.75);
+}
+
+
+.import-sub {
+    position: relative;
+
+    margin-top: 4px;
+
+    font-size: 9px;
+
+    color: var(--text-dim);
+}

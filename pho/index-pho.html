@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width,
+                 initial-scale=1.0,
+                 maximum-scale=1.0,
+                 user-scalable=no,
+                 viewport-fit=cover"
+    >
+
+    <title>SONORA — Music Space</title>
+
+    <link rel="stylesheet" href="style-pho.css">
+</head>
+
+<body>
+
+    <!-- =========================================================
+         BACKGROUND
+    ========================================================= -->
+
+    <div class="background">
+        <div class="ambient one"></div>
+        <div class="ambient two"></div>
+        <div class="ambient three"></div>
+    </div>
+
+    <canvas id="particleCanvas"></canvas>
+
+
+    <!-- =========================================================
+         APP
+    ========================================================= -->
+
+    <main class="app">
+
+        <!-- =====================================================
+             LEFT PLAYER AREA
+        ===================================================== -->
+
+        <section class="player-area">
+
+            <!-- Logo -->
+
+            <div class="player-header">
+
+                <div class="logo-mark"></div>
+
+                <div>
+                    <div class="logo-text">
+                        SONORA
+                    </div>
+
+                    <div class="logo-sub">
+                        LIVING MUSIC
+                    </div>
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 INVISIBLE PREV / NEXT ZONES
+            ================================================== -->
+
+            <div class="navigation-zones">
+
+                <div
+                    class="navigation-zone prev-zone"
+                    aria-label="上一首"
+                ></div>
+
+                <div
+                    class="navigation-zone next-zone"
+                    aria-label="下一首"
+                ></div>
+
+            </div>
+
+
+            <!-- =================================================
+                 PLAYER
+            ================================================== -->
+
+            <div class="player-stage">
+
+                <div
+                    class="player-system"
+                    id="playerSystem"
+                >
+
+                    <!-- Outer orbit -->
+
+                    <div class="orbit"></div>
+
+
+                    <!-- Progress circle -->
+
+                    <div
+                        class="progress-orbit"
+                        id="progressOrbit"
+                    ></div>
+
+
+                    <!-- Progress ball -->
+
+                    <div
+                        class="progress-ball-container"
+                        id="progressBallContainer"
+                    >
+                        <div class="progress-ball"></div>
+                    </div>
+
+
+                    <!-- =================================================
+                         ROTATING VINYL
+                    ================================================= -->
+
+                    <div
+                        class="record"
+                        id="record"
+                    >
+
+                        <div class="record-light"></div>
+
+                        <div class="grooves"></div>
+
+                        <div class="record-label"></div>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         NON-ROTATING PLAY BUTTON
+                    ================================================= -->
+
+                    <div
+                        class="play-button"
+                        id="playButton"
+                    >
+                        <div
+                            class="play-icon"
+                            id="playIcon"
+                        ></div>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 TRACK INFORMATION
+            ================================================== -->
+
+            <div class="track-info">
+
+                <div class="track-status">
+                    LOCAL PLAYING
+                </div>
+
+                <div
+                    class="track-title"
+                    id="currentTitle"
+                >
+                    No Music Selected
+                </div>
+
+                <div
+                    class="track-artist"
+                    id="currentArtist"
+                >
+                    Import your local music
+                </div>
+
+                <!--
+                    时间已经按照要求移除。
+                    JS 仍然可以正常控制进度。
+                -->
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+             RIGHT MUSIC SPACE
+        ===================================================== -->
+
+        <section class="music-space">
+
+            <!-- Header -->
+
+            <header class="space-header">
+
+                <div>
+
+                    <div class="space-title">
+                        Music Space
+                    </div>
+
+                    <div class="space-description">
+                        YOUR LOCAL SOUND UNIVERSE
+                    </div>
+
+                </div>
+
+
+                <!-- Header Actions -->
+
+                <div class="header-actions">
+
+                    <!-- Add music -->
+
+                    <button
+                        class="add-button"
+                        id="addButton"
+                        aria-label="Import music"
+                    >
+                        <span class="add-icon"></span>
+                    </button>
+
+
+                    <!-- Search -->
+
+                    <button
+                        class="search-button"
+                        id="searchButton"
+                        aria-label="搜索"
+                    >
+                        <span class="search-icon"></span>
+                    </button>
+
+                </div>
+
+
+                <!-- Search popup -->
+
+                <div
+                    class="search-box"
+                    id="searchBox"
+                >
+
+                    <input
+                        id="searchInput"
+                        class="search-input"
+                        type="text"
+                        autocomplete="off"
+                        placeholder="Search your music..."
+                    >
+
+                </div>
+
+            </header>
+
+
+            <!-- =================================================
+                 LIBRARY
+            ================================================== -->
+
+            <div class="library">
+
+                <!-- Import Area -->
+
+                <div
+                    class="import-area"
+                    id="importArea"
+                >
+
+                    <div class="import-symbol"></div>
+
+                    <div class="import-title">
+                        Import Local Music
+                    </div>
+
+                    <div class="import-sub">
+                        Click or drop a music folder here
+                    </div>
+
+                </div>
+
+
+                <!-- Hidden file input -->
+
+                <input
+                    type="file"
+                    id="fileInput"
+                    hidden
+                    multiple
+                    webkitdirectory
+                    directory
+                    accept="
+                        audio/mpeg,
+                        audio/wav,
+                        audio/flac,
+                        audio/mp4,
+                        audio/aac,
+                        audio/ogg,
+                        audio/webm
+                    "
+                >
+
+
+                <!-- Library heading -->
+
+                <div class="library-heading">
+
+                    <span>
+                        Library
+                    </span>
+
+                    <span
+                        class="track-count"
+                        id="trackCount"
+                    >
+                        0 songs
+                    </span>
+
+                </div>
+
+
+                <!-- Track list -->
+
+                <div
+                    class="track-list"
+                    id="trackList"
+                ></div>
+
+
+                <!-- Empty -->
+
+                <div
+                    class="empty show"
+                    id="emptyState"
+                >
+                    Your local music will appear here.
+                    <br>
+                    Import a folder to start listening.
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- =========================================================
+         TOAST
+    ========================================================= -->
+
+    <div
+        class="toast"
+        id="toast"
+    ></div>
+
+
+    <!-- =========================================================
+         AUDIO
+    ========================================================= -->
+
+    <audio
+        id="audio"
+        preload="metadata"
+    ></audio>
+
+
+    <script src="script-pho.js"></script>
+
+</body>
+</html>

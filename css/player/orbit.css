@@ -1,0 +1,51 @@
+/* 
+   OUTER ORBIT
+ */
+
+.orbit {
+    position: absolute;
+
+    inset: -24px;
+
+    border-radius: 50%;
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.065);
+
+    box-shadow:
+        0 0 40px rgba(143, 97, 255, 0.05),
+        inset 0 0 40px rgba(255, 255, 255, 0.015);
+
+    pointer-events: none;
+}
+
+
+.orbit::before {
+    content: "";
+
+    position: absolute;
+
+    inset: 11px;
+
+    border-radius: 50%;
+
+    border:
+        1px dashed
+        rgba(255, 255, 255, 0.045);
+
+    animation:
+        orbitDash
+        18s
+        linear
+        infinite;
+}
+
+
+@keyframes orbitDash {
+
+    to {
+        transform: rotate(360deg);
+    }
+
+}
