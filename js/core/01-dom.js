@@ -1,111 +1,65 @@
-/* ========================================================
-   DOM
-======================================================== */
-
-
 /*
- * Audio
+ * SONORA — DOM Service
+ * Responsibility: resolve and expose DOM references only.
+ * No feature logic. No cross-module calls.
  */
-const audio =
-    document.getElementById("audio");
+(() => {
+    "use strict";
 
+    const selectors = {
+        audio: "#audio",
+        record: "#record",
+        playerSystem: "#playerSystem",
+        currentTitle: "#currentTitle",
+        currentArtist: "#currentArtist",
+        progressOrbit: "#progressOrbit",
+        progressBallContainer: "#progressBallContainer",
+        trackList: "#trackList",
+        trackCount: "#trackCount",
+        emptyState: "#emptyState",
+        fileInput: "#fileInput",
+        importArea: "#importArea",
+        addButton: "#addButton",
+        searchButton: "#searchButton",
+        searchBox: "#searchBox",
+        searchInput: "#searchInput",
+        prevZone: ".prev-zone",
+        nextZone: ".next-zone",
+        toast: "#toast",
+        clock: "#clock",
+        particleCanvas: "#particleCanvas",
+        trackInfo: "#trackInfo",
+        volumeControl: "#volumeControl",
+        volumeTrack: ".volume-track",
+        volumeFill: "#volumeFill",
+        volumeThumb: "#volumeThumb",
+        volumeValue: "#volumeValue"
+    };
 
-/*
- * Record
- */
-const record =
-    document.getElementById("record");
+    const elements = {};
 
+    for (const [name, selector] of Object.entries(selectors)) {
+        elements[name] =
+            selector.startsWith("#")
+                ? document.getElementById(selector.slice(1))
+                : document.querySelector(selector);
+    }
 
-/*
- * Player
- */
-const playerSystem =
-    document.getElementById("playerSystem");
+    function require(name) {
+        const element = elements[name];
 
+        if (!element) {
+            throw new Error(`[SONORA] Required DOM element not found: ${name}`);
+        }
 
-/*
- * Current Track
- */
-const currentTitle =
-    document.getElementById("currentTitle");
+        return element;
+    }
 
+    Sonora.dom = Object.freeze({
+        get: name => elements[name] || null,
+        require,
+        all: Object.freeze({ ...elements })
+    });
 
-const currentArtist =
-    document.getElementById("currentArtist");
-
-
-/*
- * Progress
- */
-const progressOrbit =
-    document.getElementById("progressOrbit");
-
-
-const progressBallContainer =
-    document.getElementById(
-        "progressBallContainer"
-    );
-
-
-/*
- * Track List
- */
-const trackList =
-    document.getElementById("trackList");
-
-
-const trackCount =
-    document.getElementById("trackCount");
-
-
-const emptyState =
-    document.getElementById("emptyState");
-
-
-/*
- * Import
- */
-const fileInput =
-    document.getElementById("fileInput");
-
-
-const importArea =
-    document.getElementById("importArea");
-
-
-const addButton =
-    document.getElementById("addButton");
-
-
-/*
- * Search
- */
-const searchButton =
-    document.getElementById("searchButton");
-
-
-const searchBox =
-    document.getElementById("searchBox");
-
-
-const searchInput =
-    document.getElementById("searchInput");
-
-
-/*
- * Previous / Next
- */
-const prevZone =
-    document.querySelector(".prev-zone");
-
-
-const nextZone =
-    document.querySelector(".next-zone");
-
-
-/*
- * Toast
- */
-const toast =
-    document.getElementById("toast");
+    Sonora.events.emit("dom:ready", { dom: Sonora.dom });
+})();

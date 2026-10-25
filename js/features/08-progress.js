@@ -1,204 +1,81 @@
-/* ========================================================
-   SMOOTH PROGRESS ANIMATION
-======================================================== */
-
-
 /*
- * 获取当前真实进度
+ * SONORA — Progress Feature
+ * Responsibility: circular progress visualization only.
  */
-function getAudioProgress() {
+(() => {
+    "use strict";
 
-    if (
-        !Number.isFinite(
-            audio.duration
-        )
-        ||
-        audio.duration <= 0
-    ) {
+    const dom = Sonora.dom;
+    const state = Sonora.state;
+    const events = Sonora.events;
+    const utils = Sonora.utils;
 
-        return 0;
+    const audio = dom.get("audio");
+    const orbit = dom.get("progressOrbit");
+    const ball = dom.get("progressBallContainer");
 
+    function getProgress() {
+        if (!audio ||
+            !Number.isFinite(audio.duration) ||
+            audio.duration <= 0) {
+            return 0;
+        }
+
+        return utils.clamp(audio.currentTime / audio.duration);
     }
 
+    function update() {
+        const progress = getProgress();
+        const angle = progress * 360;
 
-    return Math.min(
-        1,
-        Math.max(
-            0,
-            audio.currentTime /
-            audio.duration
-        )
-    );
+        orbit?.style.setProperty("--progress", String(progress));
+        ball?.style.setProperty("--progress-angle", `${angle}deg`);
 
-}
+        if (ball) ball.style.transform = `rotate(${angle}deg)`;
 
-
-/* ========================================================
-   UPDATE PROGRESS VISUAL
-======================================================== */
-
-function updateProgressVisual() {
-
-    const progress =
-        getAudioProgress();
-
-
-    /*
-     * 圆形进度环
-     *
-     * 0deg = 正上方
-     */
-    progressOrbit.style.setProperty(
-        "--progress",
-        progress
-    );
-
-
-    /*
-     * 进度球角度
-     *
-     * 0deg = 正上方
-     *
-     * 360deg = 一整圈
-     */
-    const angle =
-        progress * 360;
-
-
-    progressBallContainer.style.setProperty(
-        "--progress-angle",
-        `${angle}deg`
-    );
-
-
-    progressBallContainer.style.transform =
-        `rotate(${angle}deg)`;
-
-}
-
-
-/* ========================================================
-   ANIMATE PROGRESS
-======================================================== */
-
-function animateProgress() {
-
-    /*
-     * 停止
-     */
-    if (!isPlaying) {
-
-        progressAnimationFrame =
-            null;
-
-        return;
-
+        events.emit("progress:changed", { progress, angle });
     }
 
+    function animate() {
+        if (!state.isPlaying) {
+            state.progress.animationFrame = null;
+            return;
+        }
 
-    /*
-     * 每一帧读取 audio.currentTime
-     */
-    updateProgressVisual();
-
-
-    /*
-     * 下一帧
-     */
-    progressAnimationFrame =
-        requestAnimationFrame(
-            animateProgress
-        );
-
-}
-
-
-/* ========================================================
-   START
-======================================================== */
-
-function startProgressAnimation() {
-
-    if (
-        progressAnimationFrame !== null
-    ) {
-
-        return;
-
+        update();
+        state.progress.animationFrame = requestAnimationFrame(animate);
     }
 
-
-    progressAnimationFrame =
-        requestAnimationFrame(
-            animateProgress
-        );
-
-}
-
-
-/* ========================================================
-   STOP
-======================================================== */
-
-function stopProgressAnimation() {
-
-    if (
-        progressAnimationFrame !== null
-    ) {
-
-        cancelAnimationFrame(
-            progressAnimationFrame
-        );
-
+    function start() {
+        if (state.progress.animationFrame !== null) return;
+        state.progress.animationFrame = requestAnimationFrame(animate);
     }
 
+    function stop() {
+        if (state.progress.animationFrame !== null) {
+            cancelAnimationFrame(state.progress.animationFrame);
+        }
 
-    progressAnimationFrame =
-        null;
+        state.progress.animationFrame = null;
+        update();
+    }
 
-}
+    function reset() {
+        orbit?.style.setProperty("--progress", "0");
+        ball?.style.setProperty("--progress-angle", "0deg");
 
+        if (ball) ball.style.transform = "rotate(0deg)";
+    }
 
-/* ========================================================
-   RESET
-======================================================== */
-
-function resetProgressVisual() {
-
-    progressOrbit.style.setProperty(
-        "--progress",
-        "0"
-    );
-
-
-    progressBallContainer.style.setProperty(
-        "--progress-angle",
-        "0deg"
-    );
-
-
-    progressBallContainer.style.transform =
-        "rotate(0deg)";
-
-}
-
-
-/* ========================================================
-   COMPATIBILITY
-======================================================== */
-
-
-/*
- * 保留原来的函数名称。
- *
- * 如果其他代码调用：
- *
- * updateProgress()
- *
- * 仍然不会报错。
- */
-function updateProgress() {
-
-    updateProgressVisual();
-
-}
+    events.on("progress:start", start);
+    events.on("progress:stop", stop);
+    events.on("progress:reset", reset);
+    events.on("progress:update", update);
+    Sonora.services.progress = Object.freeze({
+        getProgress,
+        update,
+        start,
+        stop,
+        reset
+    });
+})();

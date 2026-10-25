@@ -1,366 +1,149 @@
-/* ========================================================
-   SONORA — Volume Control
-======================================================== */
-
+/*
+ * SONORA — Volume Feature
+ * Responsibility: player volume, persistence and volume UI.
+ * Keyboard and other modules communicate through events.
+ */
 (() => {
+    "use strict";
 
-    const audio =
-        document.getElementById("audio");
+    const dom = Sonora.dom;
+    const events = Sonora.events;
+    const utils = Sonora.utils;
+    const config = Sonora.config;
 
-    const trackInfo =
-        document.getElementById("trackInfo");
+    const audio = dom.get("audio");
+    const control = dom.get("volumeControl");
+    const track = dom.get("volumeTrack");
+    const fill = dom.get("volumeFill");
+    const thumb = dom.get("volumeThumb");
+    const value = dom.get("volumeValue");
 
-    const volumeControl =
-        document.getElementById("volumeControl");
-
-    const volumeTrack =
-        document.querySelector(".volume-track");
-
-    const volumeFill =
-        document.getElementById("volumeFill");
-
-    const volumeThumb =
-        document.getElementById("volumeThumb");
-
-    const volumeValue =
-        document.getElementById("volumeValue");
-
-
-    if (
-        !audio ||
-        !trackInfo ||
-        !volumeControl ||
-        !volumeTrack ||
-        !volumeFill ||
-        !volumeThumb ||
-        !volumeValue
-    ) {
-        console.warn(
-            "[SONORA] Volume elements not found."
-        );
-
+    if (!audio || !control || !track || !fill || !thumb || !value) {
+        console.warn("[SONORA] Volume UI is unavailable.");
         return;
     }
 
+    const settings = {
+        storageKey: "sonora-volume",
+        min: 0,
+        max: 1,
+        step: 0.05,
+        initial: config.player.initialVolume
+    };
 
-    /* ====================================================
-       STATE
-    ==================================================== */
-
-    const STORAGE_KEY =
-        "sonora-volume";
-
-    let volume =
-        Number(
-            localStorage.getItem(STORAGE_KEY)
-        );
-
-    if (
-        !Number.isFinite(volume) ||
-        volume < 0 ||
-        volume > 1
-    ) {
-        volume = 0.5;
-    }
-
-
+    let volume = readStoredVolume();
     let dragging = false;
 
+    function readStoredVolume() {
+        const stored = Number(localStorage.getItem(settings.storageKey));
 
-    /* ====================================================
-       APPLY VOLUME
-    ==================================================== */
+        return Number.isFinite(stored) &&
+            stored >= settings.min &&
+            stored <= settings.max
+            ? stored
+            : settings.initial;
+    }
 
-    function applyVolume() {
-
-        /*
-         * HTMLAudioElement.volume 是播放器自己的音量，
-         * 不会修改 Windows / HarmonyOS 系统音量。
-         *
-         * 100% = 当前系统音量
-         * 50%  = 当前系统音量 × 0.5
-         * 0%   = 静音
-         */
-
-        audio.volume = volume;
-
+    function persist() {
         localStorage.setItem(
-            STORAGE_KEY,
+            settings.storageKey,
             String(volume)
         );
-
-        updateUI();
-
-        /* ====================================================
-        EXPOSE API FOR KEYBOARD
-        ==================================================== */
-
-        window.SonoraVolume = {
-
-            get: () => volume,
-
-            set: (value) => {
-
-                if (!Number.isFinite(value)) {
-                    return;
-                }
-
-                volume =
-                    Math.max(
-                        0,
-                        Math.min(1, value)
-                    );
-
-                applyVolume();
-
-            },
-
-            change: (delta) => {
-
-                if (!Number.isFinite(delta)) {
-                    return;
-                }
-
-                volume =
-                    Math.max(
-                        0,
-                        Math.min(1, volume + delta)
-                    );
-
-                applyVolume();
-
-            },
-
-            /*
-            * 键盘操作时显示音量条
-            */
-            show: () => {
-
-                volumeControl.classList.add(
-                    "keyboard-active"
-                );
-
-            },
-
-            /*
-            * 键盘松开后隐藏音量条
-            */
-            hide: () => {
-
-                volumeControl.classList.remove(
-                    "keyboard-active"
-                );
-
-            }
-
-        };
     }
-
-
-    /* ====================================================
-       UPDATE UI
-    ==================================================== */
 
     function updateUI() {
+        const percentage = Math.round(volume * 100);
 
-        const percentage =
-            Math.round(volume * 100);
+        fill.style.width = `${percentage}%`;
+        thumb.style.left = `${percentage}%`;
+        value.textContent = `${percentage}%`;
 
-        volumeFill.style.width =
-            `${percentage}%`;
-
-        volumeThumb.style.left =
-            `${percentage}%`;
-
-        volumeValue.textContent =
-            `${percentage}%`;
-
-        volumeControl
-            .setAttribute(
-                "aria-valuenow",
-                String(percentage)
-            );
+        control.setAttribute("aria-valuenow", String(percentage));
     }
 
+    function apply(nextVolume) {
+        if (!Number.isFinite(nextVolume)) return;
 
-    /* ====================================================
-       CALCULATE POSITION
-    ==================================================== */
+        volume = utils.clamp(
+            nextVolume,
+            settings.min,
+            settings.max
+        );
 
-    function setVolumeFromPointer(clientX) {
-
-        const rect =
-            volumeTrack.getBoundingClientRect();
-
-        if (rect.width <= 0) {
-            return;
-        }
-
-        let ratio =
-            (clientX - rect.left) /
-            rect.width;
-
-        ratio =
-            Math.max(
-                0,
-                Math.min(1, ratio)
-            );
-
-        volume = ratio;
-
-        applyVolume();
+        audio.volume = volume;
+        persist();
+        updateUI();
     }
 
+    function setFromPointer(clientX) {
+        const rect = track.getBoundingClientRect();
 
-    /* ====================================================
-       MOUSE DOWN
-    ==================================================== */
+        if (rect.width <= 0) return;
 
-    volumeTrack.addEventListener(
-        "mousedown",
-        (event) => {
+        const ratio =
+            (clientX - rect.left) / rect.width;
 
-            dragging = true;
+        apply(ratio);
+    }
 
+    function show() {
+        control.classList.add("keyboard-active");
+    }
+
+    function hide() {
+        control.classList.remove("keyboard-active");
+    }
+
+    track.addEventListener("mousedown", event => {
+        dragging = true;
+        event.preventDefault();
+        setFromPointer(event.clientX);
+    });
+
+    window.addEventListener("mousemove", event => {
+        if (dragging) setFromPointer(event.clientX);
+    });
+
+    window.addEventListener("mouseup", () => {
+        dragging = false;
+    });
+
+    track.addEventListener("click", event => {
+        setFromPointer(event.clientX);
+    });
+
+    control.addEventListener("keydown", event => {
+        if (event.key === "ArrowLeft") {
+            apply(volume - settings.step);
             event.preventDefault();
-
-            setVolumeFromPointer(
-                event.clientX
-            );
+        } else if (event.key === "ArrowRight") {
+            apply(volume + settings.step);
+            event.preventDefault();
+        } else if (event.key === "Home") {
+            apply(settings.min);
+            event.preventDefault();
+        } else if (event.key === "End") {
+            apply(settings.max);
+            event.preventDefault();
         }
-    );
+    });
 
+    control.setAttribute("role", "slider");
+    control.setAttribute("aria-valuemin", "0");
+    control.setAttribute("aria-valuemax", "100");
+    control.setAttribute("tabindex", "0");
 
-    /* ====================================================
-       MOUSE MOVE
-    ==================================================== */
+    events.on("volume:change", ({ delta }) => apply(volume + delta));
+    events.on("volume:show", show);
+    events.on("volume:hide", hide);
 
-    window.addEventListener(
-        "mousemove",
-        (event) => {
+    apply(volume);
 
-            if (!dragging) {
-                return;
-            }
-
-            setVolumeFromPointer(
-                event.clientX
-            );
-        }
-    );
-
-
-    /* ====================================================
-       MOUSE UP
-    ==================================================== */
-
-    window.addEventListener(
-        "mouseup",
-        () => {
-
-            dragging = false;
-
-        }
-    );
-
-
-    /* ====================================================
-       CLICK TRACK
-    ==================================================== */
-
-    volumeTrack.addEventListener(
-        "click",
-        (event) => {
-
-            setVolumeFromPointer(
-                event.clientX
-            );
-
-        }
-    );
-
-
-    /* ====================================================
-       KEYBOARD ACCESSIBILITY
-    ==================================================== */
-
-    volumeControl.addEventListener(
-        "keydown",
-        (event) => {
-
-            const step = 0.05;
-
-            if (event.key === "ArrowLeft") {
-
-                volume =
-                    Math.max(
-                        0,
-                        volume - step
-                    );
-
-                applyVolume();
-
-                event.preventDefault();
-            }
-
-            else if (event.key === "ArrowRight") {
-
-                volume =
-                    Math.min(
-                        1,
-                        volume + step
-                    );
-
-                applyVolume();
-
-                event.preventDefault();
-            }
-
-            else if (event.key === "Home") {
-
-                volume = 0;
-
-                applyVolume();
-
-                event.preventDefault();
-            }
-
-            else if (event.key === "End") {
-
-                volume = 1;
-
-                applyVolume();
-
-                event.preventDefault();
-            }
-        }
-    );
-
-
-    /* ====================================================
-       INITIALIZE
-    ==================================================== */
-
-    volumeControl.setAttribute(
-        "role",
-        "slider"
-    );
-
-    volumeControl.setAttribute(
-        "aria-valuemin",
-        "0"
-    );
-
-    volumeControl.setAttribute(
-        "aria-valuemax",
-        "100"
-    );
-
-    volumeControl.setAttribute(
-        "tabindex",
-        "0"
-    );
-
-    applyVolume();
-
+    Sonora.services.volume = Object.freeze({
+        get: () => volume,
+        set: apply,
+        change: delta => apply(volume + delta),
+        show,
+        hide
+    });
 })();

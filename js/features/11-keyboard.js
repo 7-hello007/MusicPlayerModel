@@ -1,641 +1,202 @@
-/* ========================================================
-   KEYBOARD
-======================================================== */
-
+/*
+ * SONORA — Keyboard Feature
+ * Responsibility: keyboard interaction and key-hold timing.
+ * It sends commands through the event bus instead of calling playback/volume code.
+ */
 (() => {
+    "use strict";
 
-    /*
-     * 长按判定时间
-     *
-     * 超过这个时间没有松开，
-     * 就认为是长按。
-     */
-    const LONG_PRESS_DELAY = 320;
+    const dom = Sonora.dom;
+    const state = Sonora.state;
+    const events = Sonora.events;
+    const config = Sonora.config;
+    const utils = Sonora.utils;
 
+    const audio = dom.get("audio");
 
-    /*
-     * 长按左右键时，
-     * 每秒调整多少秒进度。
-     *
-     * 10 表示：
-     * 长按 1 秒 ≈ 快进 / 快退 10 秒
-     */
-    const SEEK_SPEED = 10;
-
-
-    /*
-     * 上下键每次调整音量
-     *
-     * 0.05 = 5%
-     */
-    const VOLUME_STEP = 0.05;
-    const volumeKeysHeld = new Set();
-
-
-    /*
-     * 当前左右键长按状态
-     */
-    let seekHold = null;
-
-
-    /* ====================================================
-       IS TYPING TARGET
-    ==================================================== */
+    const settings = {
+        longPressDelay: 320,
+        seekSpeed: 10,
+        volumeStep: 0.05
+    };
 
     function isTypingTarget(target) {
-
-        if (!target) {
-            return false;
-        }
-
-        const tag =
-            target.tagName;
+        if (!target) return false;
 
         return (
-            tag === "INPUT"
-            ||
-            tag === "TEXTAREA"
-            ||
+            target.tagName === "INPUT" ||
+            target.tagName === "TEXTAREA" ||
             target.isContentEditable
         );
-
     }
-
-
-    /* ====================================================
-       GET PROGRESS
-    ==================================================== */
-
-    function getKeyboardProgress() {
-
-        if (
-            !Number.isFinite(audio.duration)
-            ||
-            audio.duration <= 0
-        ) {
-
-            return 0;
-
-        }
-
-        return Math.min(
-            1,
-            Math.max(
-                0,
-                audio.currentTime /
-                audio.duration
-            )
-        );
-
-    }
-
-
-    /* ====================================================
-       SYNC SEEK VISUAL
-    ==================================================== */
 
     function syncSeekVisual() {
+        events.emit(config.events.PROGRESS_CHANGED);
 
-        /*
-         * 刷新圆形进度球
-         */
-        updateProgressVisual();
+        if (!audio ||
+            !Number.isFinite(audio.duration) ||
+            audio.duration <= 0) {
+            return;
+        }
 
+        const progress = utils.clamp(audio.currentTime / audio.duration);
 
-        /*
-         * 同步唱片角度
-         */
-        const progress =
-            getKeyboardProgress();
-
-
-        recordRotation =
-            progress * 360;
-
-
-        applyRecordRotation();
-
+        state.record.rotation = progress * 360;
+        events.emit("record:rotation", {
+            rotation: state.record.rotation
+        });
     }
-
-
-    /* ====================================================
-       STOP SEEK HOLD
-    ==================================================== */
 
     function stopSeekHold(commitShortPress) {
+        const hold = state.keyboard.seekHold;
+        if (!hold) return;
 
-        if (!seekHold) {
-            return;
+        if (hold.timer) clearTimeout(hold.timer);
+        if (hold.raf) cancelAnimationFrame(hold.raf);
+
+        state.keyboard.seekHold = null;
+
+        if (!hold.longPress && commitShortPress) {
+            events.emit(
+                hold.key === "ArrowLeft"
+                    ? "playback:previous"
+                    : "playback:next"
+            );
         }
-
-
-        const {
-
-            key,
-
-            longPress,
-
-            timer,
-
-            raf
-
-        } = seekHold;
-
-
-        if (timer) {
-
-            clearTimeout(timer);
-
-        }
-
-
-        if (raf) {
-
-            cancelAnimationFrame(raf);
-
-        }
-
-
-        seekHold = null;
-
-
-        /*
-         * 如果没有进入长按，
-         * 并且是正常松键，
-         * 则执行短按切歌。
-         */
-        if (
-            !longPress
-            &&
-            commitShortPress
-        ) {
-
-            if (key === "ArrowLeft") {
-
-                previousTrack();
-
-            }
-
-            else if (key === "ArrowRight") {
-
-                nextTrack();
-
-            }
-
-        }
-
     }
 
-
-    /* ====================================================
-       START SEEK LOOP
-    ==================================================== */
-
     function startSeekLoop() {
+        const hold = state.keyboard.seekHold;
+        if (!hold) return;
 
-        if (!seekHold) {
-            return;
-        }
+        hold.longPress = true;
+        hold.lastTime = performance.now();
 
+        const step = now => {
+            const current = state.keyboard.seekHold;
 
-        seekHold.longPress =
-            true;
+            if (!current || !current.longPress) return;
 
-
-        seekHold.lastTime =
-            performance.now();
-
-
-        const step = (now) => {
-
-            if (
-                !seekHold
-                ||
-                !seekHold.longPress
-            ) {
-
+            if (!audio ||
+                !Number.isFinite(audio.duration) ||
+                audio.duration <= 0) {
+                current.lastTime = now;
+                current.raf = requestAnimationFrame(step);
                 return;
-
             }
 
+            const deltaSeconds = (now - current.lastTime) / 1000;
+            current.lastTime = now;
 
-            /*
-             * 没有有效歌曲长度
-             */
-            if (
-                !Number.isFinite(audio.duration)
-                ||
-                audio.duration <= 0
-            ) {
-
-                seekHold.lastTime =
-                    now;
-
-
-                seekHold.raf =
-                    requestAnimationFrame(
-                        step
-                    );
-
-
-                return;
-
-            }
-
-
-            const deltaSeconds =
-                (now - seekHold.lastTime) /
-                1000;
-
-
-            seekHold.lastTime =
-                now;
-
-
-            let nextTime =
-                audio.currentTime
-                +
-                seekHold.direction *
-                SEEK_SPEED *
-                deltaSeconds;
-
-
-            nextTime =
-                Math.max(
-                    0,
-                    Math.min(
-                        audio.duration,
-                        nextTime
-                    )
-                );
-
-
-            audio.currentTime =
-                nextTime;
-
+            audio.currentTime = utils.clamp(
+                audio.currentTime +
+                current.direction * settings.seekSpeed * deltaSeconds,
+                0,
+                audio.duration
+            );
 
             syncSeekVisual();
 
-
-            seekHold.raf =
-                requestAnimationFrame(
-                    step
-                );
-
+            current.raf = requestAnimationFrame(step);
         };
 
-
-        seekHold.raf =
-            requestAnimationFrame(
-                step
-            );
-
+        hold.raf = requestAnimationFrame(step);
     }
-
-
-    /* ====================================================
-       BEGIN SEEK HOLD
-    ==================================================== */
 
     function beginSeekHold(key, direction) {
+        stopSeekHold(false);
 
-        /*
-         * 如果已经有按住状态，
-         * 先取消，不触发短按。
-         */
-        if (seekHold) {
-
-            stopSeekHold(false);
-
-        }
-
-
-        seekHold = {
-
+        const hold = {
             key,
-
             direction,
-
             longPress: false,
-
             timer: null,
-
             raf: null,
-
             lastTime: 0
-
         };
 
+        state.keyboard.seekHold = hold;
 
-        seekHold.timer =
-            setTimeout(
-                () => {
-
-                    if (
-                        seekHold
-                        &&
-                        seekHold.key === key
-                    ) {
-
-                        startSeekLoop();
-
-                    }
-
-                },
-                LONG_PRESS_DELAY
-            );
-
+        hold.timer = setTimeout(() => {
+            if (state.keyboard.seekHold?.key === key) {
+                startSeekLoop();
+            }
+        }, settings.longPressDelay);
     }
 
+    function handleKeyDown(event) {
+        if (isTypingTarget(event.target)) return;
 
-    /* ====================================================
-       KEYDOWN
-    ==================================================== */
-
-    document.addEventListener(
-        "keydown",
-        event => {
-
-            /*
-             * 搜索框、输入框内不拦截
-             */
-            if (
-                isTypingTarget(
-                    event.target
-                )
-            ) {
-
-                return;
-
-            }
-
-
-            /* ============================================
-               SPACE
-               播放 / 暂停
-            ============================================ */
-
-            if (
-                event.code === "Space"
-            ) {
-
-                event.preventDefault();
-
-
-                /*
-                 * 防止长按空格连续切换
-                 */
-                if (event.repeat) {
-
-                    return;
-
-                }
-
-
-                togglePlay();
-
-                return;
-
-            }
-
-
-            /* ============================================
-               ARROW UP
-               音量 +
-            ============================================ */
-
-            if (
-                event.key === "ArrowUp"
-            ) {
-
-                event.preventDefault();
-
-
-                if (window.SonoraVolume) {
-
-                    volumeKeysHeld.add(
-                        event.key
-                    );
-
-
-                    window.SonoraVolume.change(
-                        VOLUME_STEP
-                    );
-
-
-                    window.SonoraVolume.show();
-
-                }
-
-                return;
-
-            }
-
-
-            /* ============================================
-               ARROW DOWN
-               音量 -
-            ============================================ */
-
-            if (
-                event.key === "ArrowDown"
-            ) {
-
-                event.preventDefault();
-
-
-                if (window.SonoraVolume) {
-
-                    volumeKeysHeld.add(
-                        event.key
-                    );
-
-
-                    window.SonoraVolume.change(
-                        -VOLUME_STEP
-                    );
-
-
-                    window.SonoraVolume.show();
-
-                }
-
-                return;
-
-            }
-
-
-
-            /* ============================================
-               ARROW LEFT / RIGHT
-               短按：上一首 / 下一首
-               长按：当前歌曲快退 / 快进
-            ============================================ */
-
-            if (
-                event.key === "ArrowLeft"
-                ||
-                event.key === "ArrowRight"
-            ) {
-
-                event.preventDefault();
-
-
-                /*
-                 * 忽略系统自动重复 keydown。
-                 *
-                 * 长按由我们自己计时器处理。
-                 */
-                if (event.repeat) {
-
-                    return;
-
-                }
-
-
-                const direction =
-                    event.key === "ArrowLeft"
-                        ? -1
-                        : 1;
-
-
-                beginSeekHold(
-                    event.key,
-                    direction
-                );
-
-            }
-
+        if (event.code === "Space") {
+            event.preventDefault();
+            if (!event.repeat) events.emit("playback:toggle");
+            return;
         }
-    );
 
+        if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+            event.preventDefault();
 
-    /* ====================================================
-       KEYUP
-    ==================================================== */
+            state.keyboard.volumeKeysHeld.add(event.key);
 
-        document.addEventListener(
-        "keyup",
-        event => {
+            events.emit("volume:change", {
+                delta: event.key === "ArrowUp"
+                    ? settings.volumeStep
+                    : -settings.volumeStep
+            });
 
-            if (
-                isTypingTarget(
-                    event.target
-                )
-            ) {
-
-                return;
-
-            }
-
-
-            /* ============================================
-               ARROW UP / DOWN
-               松开后隐藏音量条
-            ============================================ */
-
-            if (
-                event.key === "ArrowUp"
-                ||
-                event.key === "ArrowDown"
-            ) {
-
-                volumeKeysHeld.delete(
-                    event.key
-                );
-
-
-                /*
-                 * 两个键都松开后才隐藏。
-                 *
-                 * 这样即使同时按住上下，
-                 * 松开其中一个，音量条也不会闪掉。
-                 */
-                if (
-                    volumeKeysHeld.size === 0
-                    &&
-                    window.SonoraVolume
-                ) {
-
-                    window.SonoraVolume.hide();
-
-                }
-
-                return;
-
-            }
-
-
-            /* ============================================
-               ARROW LEFT / RIGHT
-            ============================================ */
-
-            if (
-                event.key === "ArrowLeft"
-                ||
-                event.key === "ArrowRight"
-            ) {
-
-                if (
-                    seekHold
-                    &&
-                    seekHold.key === event.key
-                ) {
-
-                    stopSeekHold(true);
-
-                }
-
-            }
-
+            events.emit("volume:show");
+            return;
         }
-    );
 
+        if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+            event.preventDefault();
+            if (event.repeat) return;
 
-    /* ====================================================
-       WINDOW BLUR
-       防止切出窗口后卡住
-    ==================================================== */
-
-    window.addEventListener(
-        "blur",
-        () => {
-
-            if (seekHold) {
-
-                stopSeekHold(false);
-
-            }
-
-            volumeKeysHeld.clear();
-
-
-            if (window.SonoraVolume) {
-
-                window.SonoraVolume.hide();
-
-            }
-
+            beginSeekHold(
+                event.key,
+                event.key === "ArrowLeft" ? -1 : 1
+            );
         }
-    );
+    }
 
+    function handleKeyUp(event) {
+        if (isTypingTarget(event.target)) return;
 
-    /* ====================================================
-       AUDIO ENDED
-       歌曲结束时清理长按
-    ==================================================== */
+        if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+            state.keyboard.volumeKeysHeld.delete(event.key);
 
-    audio.addEventListener(
-        "ended",
-        () => {
-
-            if (seekHold) {
-
-                stopSeekHold(false);
-
+            if (!state.keyboard.volumeKeysHeld.size) {
+                events.emit("volume:hide");
             }
 
+            return;
         }
-    );
 
+        if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+            const hold = state.keyboard.seekHold;
+
+            if (hold?.key === event.key) {
+                stopSeekHold(true);
+            }
+        }
+    }
+
+    function handleBlur() {
+        stopSeekHold(false);
+        state.keyboard.volumeKeysHeld.clear();
+        events.emit("volume:hide");
+    }
+
+    function handleAudioEnded() {
+        stopSeekHold(false);
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("keyup", handleKeyUp);
+    window.addEventListener("blur", handleBlur);
+    audio?.addEventListener("ended", handleAudioEnded);
+
+    Sonora.features.keyboard = Object.freeze({
+        stopSeekHold
+    });
 })();

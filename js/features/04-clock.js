@@ -1,422 +1,109 @@
-/* ========================================================
-   SONORA CLOCK
-   Minimal Vertical Roll
-======================================================== */
+/*
+ * SONORA — Clock Feature
+ * Responsibility: clock rendering and timing only.
+ */
+(() => {
+    "use strict";
 
-
-/* ========================================================
-   DOM
-======================================================== */
-
-const clock =
-    document.getElementById("clock");
-
-
-const clockSlots =
-    clock
-        ? Array.from(
-        clock.querySelectorAll(
-            ".clock-digit-slot"
-        )
-    )
+    const dom = Sonora.dom;
+    const clock = dom.get("clock");
+    const slots = clock
+        ? Array.from(clock.querySelectorAll(".clock-digit-slot"))
         : [];
 
+    let values = Array(6).fill("0");
+    let timer = null;
 
-/* ========================================================
-   STATE
-======================================================== */
+    function getValues() {
+        const now = new Date();
+        const time = [
+            String(now.getHours()).padStart(2, "0"),
+            String(now.getMinutes()).padStart(2, "0"),
+            String(now.getSeconds()).padStart(2, "0")
+        ].join("");
 
-let clockValues = [
-    "0",
-    "0",
-    "0",
-    "0",
-    "0",
-    "0"
-];
-
-
-/* ========================================================
-   FORMAT TIME
-======================================================== */
-
-function getClockValues() {
-
-    const now =
-        new Date();
-
-
-    const hours =
-        String(
-            now.getHours()
-        ).padStart(
-            2,
-            "0"
-        );
-
-
-    const minutes =
-        String(
-            now.getMinutes()
-        ).padStart(
-            2,
-            "0"
-        );
-
-
-    const seconds =
-        String(
-            now.getSeconds()
-        ).padStart(
-            2,
-            "0"
-        );
-
-
-    return [
-
-        hours[0],
-        hours[1],
-
-        minutes[0],
-        minutes[1],
-
-        seconds[0],
-        seconds[1]
-
-    ];
-
-}
-
-
-/* ========================================================
-   SET INITIAL DIGIT
-======================================================== */
-
-function setInitialDigit(
-    slot,
-    value
-) {
-
-    if (!slot) {
-        return;
+        return [...time];
     }
 
+    function setDigit(slot, value) {
+        if (!slot) return;
 
-    const current =
-        slot.querySelector(
-            ".current"
-        );
+        const current = slot.querySelector(".current");
+        const next = slot.querySelector(".next");
+        if (!current || !next) return;
 
-
-    const next =
-        slot.querySelector(
-            ".next"
-        );
-
-
-    if (!current || !next) {
-        return;
+        current.textContent = value;
+        next.textContent = value;
+        current.classList.remove("is-exiting");
+        next.classList.remove("is-entering");
     }
 
+    function rollDigit(slot, value) {
+        if (!slot) return;
 
-    current.textContent =
-        value;
+        const current = slot.querySelector(".current");
+        const next = slot.querySelector(".next");
+        if (!current || !next) return;
 
+        current.classList.remove("is-exiting");
+        next.classList.remove("is-entering");
+        next.textContent = value;
 
-    next.textContent =
-        value;
+        void slot.offsetWidth;
 
+        current.classList.add("is-exiting");
+        next.classList.add("is-entering");
 
-    current.classList.remove(
-        "is-exiting"
-    );
-
-
-    next.classList.remove(
-        "is-entering"
-    );
-
-}
-
-
-/* ========================================================
-   ROLL DIGIT
-======================================================== */
-
-function rollDigit(
-    slot,
-    oldValue,
-    newValue
-) {
-
-    if (!slot) {
-        return;
+        window.setTimeout(() => {
+            current.textContent = value;
+            current.classList.remove("is-exiting");
+            next.classList.remove("is-entering");
+            next.textContent = value;
+        }, 170);
     }
 
+    function update() {
+        if (!slots.length) return;
 
-    /*
-     * 数字没有变化，
-     * 不执行动画。
-     */
-    if (
-        oldValue === newValue
-    ) {
+        const nextValues = getValues();
 
-        return;
+        slots.forEach((slot, index) => {
+            if (values[index] === "0" &&
+                slot.querySelector(".current")?.textContent === "0" &&
+                slot.querySelector(".next")?.textContent === "0") {
+                setDigit(slot, nextValues[index]);
+            } else if (values[index] !== nextValues[index]) {
+                rollDigit(slot, nextValues[index]);
+            }
+        });
 
+        values = nextValues;
     }
 
-
-    const current =
-        slot.querySelector(
-            ".current"
-        );
-
-
-    const next =
-        slot.querySelector(
-            ".next"
-        );
-
-
-    if (!current || !next) {
-        return;
+    function initialize() {
+        if (!slots.length) return;
+        values = getValues();
+        slots.forEach((slot, index) => setDigit(slot, values[index]));
     }
 
+    function schedule() {
+        clearTimeout(timer);
 
-    /*
-     * 清理上一轮动画。
-     */
-    current.classList.remove(
-        "is-exiting"
-    );
+        const now = new Date();
+        const delay = Math.max(50, 1000 - now.getMilliseconds());
 
-    next.classList.remove(
-        "is-entering"
-    );
-
-
-    /*
-     * 设置新数字。
-     */
-    next.textContent =
-        newValue;
-
-
-    /*
-     * 强制回流。
-     */
-    void slot.offsetWidth;
-
-
-    /*
-     * 同一时间：
-     *
-     * 旧数字 → 向上 4px
-     *
-     * 新数字 → 从下方 4px
-     *            向上进入
-     */
-    current.classList.add(
-        "is-exiting"
-    );
-
-
-    next.classList.add(
-        "is-entering"
-    );
-
-
-    /*
-     * 动画完成以后，
-     * 新数字正式成为 current。
-     */
-    window.setTimeout(
-        () => {
-
-            current.textContent =
-                newValue;
-
-
-            current.classList.remove(
-                "is-exiting"
-            );
-
-
-            next.classList.remove(
-                "is-entering"
-            );
-
-            next.textContent =
-                newValue;
-
-        },
-        170
-    );
-
-}
-
-
-/* ========================================================
-   UPDATE CLOCK
-======================================================== */
-
-function updateClock() {
-
-    if (
-        !clockSlots.length
-    ) {
-
-        return;
-
+        timer = window.setTimeout(() => {
+            update();
+            schedule();
+        }, delay);
     }
 
-
-    const newValues =
-        getClockValues();
-
-
-    for (
-        let i = 0;
-        i < clockSlots.length;
-        i++
-    ) {
-
-        const oldValue =
-            clockValues[i];
-
-
-        const newValue =
-            newValues[i];
-
-
-        /*
-         * 第一次初始化。
-         */
-        if (
-            clockValues[i] === "0"
-                &&
-                clockSlots[i]
-                    .querySelector(
-                        ".current"
-                    )
-                    .textContent === "0"
-                &&
-                clockSlots[i]
-                    .querySelector(
-                        ".next"
-                    )
-                    .textContent === "0"
-        ) {
-
-            setInitialDigit(
-                clockSlots[i],
-                newValue
-            );
-
-        }
-
-
-        /*
-         * 数字变化。
-         */
-        else if (
-            oldValue !== newValue
-        ) {
-
-            rollDigit(
-                clockSlots[i],
-                oldValue,
-                newValue
-            );
-
-        }
-
+    function start() {
+        initialize();
+        schedule();
     }
 
+    start();
 
-    /*
-     * 保存当前时间。
-     */
-    clockValues =
-        newValues;
-
-}
-
-
-/* ========================================================
-   INITIALIZE
-======================================================== */
-
-function initializeClock() {
-
-    if (
-        !clockSlots.length
-    ) {
-
-        return;
-
-    }
-
-
-    const initialValues =
-        getClockValues();
-
-
-    for (
-        let i = 0;
-        i < clockSlots.length;
-        i++
-    ) {
-
-        setInitialDigit(
-            clockSlots[i],
-            initialValues[i]
-        );
-
-    }
-
-
-    clockValues =
-        initialValues;
-
-}
-
-
-/* ========================================================
-   SYNC TO SECOND
-======================================================== */
-
-function scheduleClock() {
-
-    const now =
-        new Date();
-
-
-    const delay =
-        1000 -
-        now.getMilliseconds();
-
-
-    setTimeout(
-        () => {
-
-            updateClock();
-
-            scheduleClock();
-
-        },
-        delay
-    );
-
-}
-
-
-/* ========================================================
-   START
-======================================================== */
-
-initializeClock();
-
-scheduleClock();
+    Sonora.features.clock = Object.freeze({ start, update });
+})();

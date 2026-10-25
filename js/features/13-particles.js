@@ -1,405 +1,144 @@
-/* ========================================================
-   PARTICLES
-======================================================== */
-
-
 /*
- * Canvas
+ * SONORA — Particle Background
+ * Responsibility: canvas particle simulation only.
  */
-const canvas =
-    document.getElementById(
-        "particleCanvas"
-    );
+(() => {
+    "use strict";
 
+    const dom = Sonora.dom;
+    const canvas = dom.get("particleCanvas");
 
-const ctx =
-    canvas.getContext("2d");
+    if (!canvas) return;
 
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
 
-/*
- * 粒子列表
- */
-let particles = [];
+    const settings = {
+        maxParticles: 130,
+        areaPerParticle: 10000,
+        minSize: 0.3,
+        sizeRange: 1.5,
+        speedRange: 0.15,
+        maxAlpha: 0.25,
+        interactionRadius: 130,
+        interactionForce: 0.35
+    };
 
+    let particles = [];
+    let mouse = {
+        x: window.innerWidth / 2,
+        y: window.innerHeight / 2
+    };
 
-/*
- * 鼠标位置
- */
-let mouseX =
-    window.innerWidth / 2;
+    function resizeCanvas() {
+        const ratio = window.devicePixelRatio || 1;
+        const width = window.innerWidth;
+        const height = window.innerHeight;
 
+        canvas.width = width * ratio;
+        canvas.height = height * ratio;
+        canvas.style.width = `${width}px`;
+        canvas.style.height = `${height}px`;
 
-let mouseY =
-    window.innerHeight / 2;
-
-
-/* ========================================================
-   CANVAS RESIZE
-======================================================== */
-
-function resizeCanvas() {
-
-    canvas.width =
-        window.innerWidth *
-        devicePixelRatio;
-
-
-    canvas.height =
-        window.innerHeight *
-        devicePixelRatio;
-
-
-    canvas.style.width =
-        window.innerWidth +
-        "px";
-
-
-    canvas.style.height =
-        window.innerHeight +
-        "px";
-
-
-    ctx.setTransform(
-        devicePixelRatio,
-        0,
-        0,
-        devicePixelRatio,
-        0,
-        0
-    );
-
-}
-
-
-window.addEventListener(
-    "resize",
-    resizeCanvas
-);
-
-
-resizeCanvas();
-
-
-/* ========================================================
-   PARTICLE CLASS
-======================================================== */
-
-class Particle {
-
-    constructor() {
-
-        /*
-         * 初始位置
-         */
-        this.x =
-            Math.random() *
-            window.innerWidth;
-
-
-        this.y =
-            Math.random() *
-            window.innerHeight;
-
-
-        /*
-         * 粒子大小
-         */
-        this.size =
-            Math.random() *
-            1.5 +
-            0.3;
-
-
-        /*
-         * 移动速度
-         */
-        this.speedX =
-            (Math.random() - 0.5) *
-            0.15;
-
-
-        this.speedY =
-            (Math.random() - 0.5) *
-            0.15;
-
-
-        /*
-         * 透明度
-         */
-        this.alpha =
-            Math.random() *
-            0.25;
-
+        ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
     }
 
-
-    /* ====================================================
-       UPDATE
-    ==================================================== */
-
-    update() {
-
-        /*
-         * 基础移动
-         */
-        this.x +=
-            this.speedX;
-
-
-        this.y +=
-            this.speedY;
-
-
-        /*
-         * X 越界
-         */
-        if (
-            this.x < -10
-            ||
-            this.x >
-                window.innerWidth + 10
-        ) {
-
-            this.x =
-                Math.random() *
-                window.innerWidth;
-
+    class Particle {
+        constructor() {
+            this.reset();
+            this.size =
+                Math.random() * settings.sizeRange +
+                settings.minSize;
+            this.speedX =
+                (Math.random() - 0.5) * settings.speedRange;
+            this.speedY =
+                (Math.random() - 0.5) * settings.speedRange;
+            this.alpha =
+                Math.random() * settings.maxAlpha;
         }
 
-
-        /*
-         * Y 越界
-         */
-        if (
-            this.y < -10
-            ||
-            this.y >
-                window.innerHeight + 10
-        ) {
-
-            this.y =
-                Math.random() *
-                window.innerHeight;
-
+        reset() {
+            this.x = Math.random() * window.innerWidth;
+            this.y = Math.random() * window.innerHeight;
         }
 
+        update() {
+            this.x += this.speedX;
+            this.y += this.speedY;
 
-        /*
-         * 鼠标交互
-         */
-        const dx =
-            this.x -
-            mouseX;
+            if (this.x < -10 || this.x > window.innerWidth + 10) {
+                this.x = Math.random() * window.innerWidth;
+            }
 
+            if (this.y < -10 || this.y > window.innerHeight + 10) {
+                this.y = Math.random() * window.innerHeight;
+            }
 
-        const dy =
-            this.y -
-            mouseY;
+            const dx = this.x - mouse.x;
+            const dy = this.y - mouse.y;
+            const distance = Math.hypot(dx, dy);
 
+            if (distance < settings.interactionRadius && distance > 0) {
+                const force =
+                    (settings.interactionRadius - distance) /
+                    settings.interactionRadius;
 
-        const distance =
-            Math.sqrt(
-                dx * dx +
-                dy * dy
-            );
-
-
-        /*
-         * 鼠标附近产生排斥
-         */
-        if (
-            distance < 130
-            &&
-            distance > 0
-        ) {
-
-            const force =
-                (130 - distance) /
-                130;
-
-
-            this.x +=
-                (dx / distance) *
-                force *
-                0.35;
-
-
-            this.y +=
-                (dy / distance) *
-                force *
-                0.35;
-
+                this.x += (dx / distance) * force * settings.interactionForce;
+                this.y += (dy / distance) * force * settings.interactionForce;
+            }
         }
 
+        draw() {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255,255,255,${this.alpha})`;
+            ctx.fill();
+        }
     }
 
-
-    /* ====================================================
-       DRAW
-    ==================================================== */
-
-    draw() {
-
-        ctx.beginPath();
-
-
-        ctx.arc(
-            this.x,
-            this.y,
-            this.size,
-            0,
-            Math.PI * 2
-        );
-
-
-        ctx.fillStyle =
-            `rgba(255,255,255,${this.alpha})`;
-
-
-        ctx.fill();
-
-    }
-
-}
-
-
-/* ========================================================
-   CREATE PARTICLES
-======================================================== */
-
-function createParticles() {
-
-    particles = [];
-
-
-    /*
-     * 根据屏幕面积动态控制数量
-     */
-    const count =
-        Math.min(
-            130,
+    function createParticles() {
+        const count = Math.min(
+            settings.maxParticles,
             Math.floor(
                 window.innerWidth *
                 window.innerHeight /
-                10000
+                settings.areaPerParticle
             )
         );
 
+        particles = Array.from(
+            { length: count },
+            () => new Particle()
+        );
+    }
 
-    for (
-        let i = 0;
-        i < count;
-        i++
-    ) {
-
-        particles.push(
-            new Particle()
+    function animate() {
+        ctx.clearRect(
+            0,
+            0,
+            window.innerWidth,
+            window.innerHeight
         );
 
-    }
-
-}
-
-
-/*
- * 初始创建
- */
-createParticles();
-
-
-/*
- * 窗口大小变化时重新创建
- */
-window.addEventListener(
-    "resize",
-    createParticles
-);
-
-
-/* ========================================================
-   MOUSE
-======================================================== */
-
-window.addEventListener(
-    "pointermove",
-    event => {
-
-        mouseX =
-            event.clientX;
-
-
-        mouseY =
-            event.clientY;
-
-    },
-    {
-        passive: true
-    }
-);
-
-
-/* ========================================================
-   PARTICLE ANIMATION
-======================================================== */
-
-function animateParticles() {
-
-    /*
-     * 清空画布
-     */
-    ctx.clearRect(
-        0,
-        0,
-        window.innerWidth,
-        window.innerHeight
-    );
-
-
-    /*
-     * 更新并绘制
-     */
-    particles.forEach(
-        particle => {
-
+        particles.forEach(particle => {
             particle.update();
-
             particle.draw();
+        });
 
-        }
-    );
+        requestAnimationFrame(animate);
+    }
 
+    window.addEventListener("resize", () => {
+        resizeCanvas();
+        createParticles();
+    });
 
-    /*
-     * 下一帧
-     */
-    requestAnimationFrame(
-        animateParticles
-    );
+    window.addEventListener("pointermove", event => {
+        mouse.x = event.clientX;
+        mouse.y = event.clientY;
+    }, { passive: true });
 
-}
-
-
-animateParticles();
-
-
-/* ========================================================
-   FINAL INITIAL STATE
-======================================================== */
-
-
-/*
- * 首次渲染歌曲列表
- */
-renderTracks();
-
-
-/*
- * 重置进度
- */
-resetProgressVisual();
-
-
-/*
- * 重置唱片
- */
-applyRecordRotation();
+    resizeCanvas();
+    createParticles();
+    animate();
+})();

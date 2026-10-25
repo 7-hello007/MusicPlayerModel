@@ -1,555 +1,210 @@
-/* ========================================================
-   PLAY TRACK
-======================================================== */
+/*
+ * SONORA — Playback Feature
+ * Responsibility: audio playback, track navigation and record rotation.
+ */
+(() => {
+    "use strict";
 
-function playTrack(index) {
+    const dom = Sonora.dom;
+    const state = Sonora.state;
+    const store = Sonora.store;
+    const events = Sonora.events;
+    const config = Sonora.config;
+    const utils = Sonora.utils;
 
-    if (
-        index < 0
-        ||
-        index >= tracks.length
-    ) {
+    const audio = dom.get("audio");
+    const record = dom.get("record");
+    const player = dom.get("playerSystem");
+    const title = dom.get("currentTitle");
+    const artist = dom.get("currentArtist");
 
-        return;
-
+    function emitPlaybackChanged() {
+        events.emit(config.events.PLAYBACK_CHANGED, {
+            playing: state.isPlaying,
+            index: state.currentIndex
+        });
     }
 
-
-    const track =
-        tracks[index];
-
-
-    /*
-     * 设置当前歌曲
-     */
-    currentIndex =
-        index;
-
-
-    /*
-     * 新歌曲从头开始
-     */
-    recordRotation = 0;
-
-
-    applyRecordRotation();
-
-
-    /*
-     * 设置音频
-     */
-    audio.src =
-        track.url;
-
-
-    /*
-     * 更新标题
-     */
-    currentTitle.textContent =
-        track.title;
-
-
-    currentArtist.textContent =
-        track.artist;
-
-
-    /*
-     * 清空旧进度
-     */
-    resetProgressVisual();
-
-
-    /*
-     * 播放
-     */
-    audio.play()
-        .then(
-            () => {
-
-                isPlaying = true;
-
-                updatePlayingState();
-
-                renderTracks();
-
-            }
-        )
-        .catch(
-            () => {
-
-                showToast(
-                    "Unable to play this file"
-                );
-
-            }
-        );
-
-}
-
-
-/* ========================================================
-   PLAY / PAUSE
-======================================================== */
-
-function togglePlay() {
-
-    /*
-     * 没有歌曲
-     */
-    if (!tracks.length) {
-
-        showToast(
-            "Import some music first"
-        );
-
-        return;
-
+    function applyRecordRotation() {
+        if (record) {
+            record.style.transform = `rotate(${state.record.rotation}deg)`;
+        }
     }
 
-
-    /*
-     * 没有当前歌曲
-     */
-    if (currentIndex === -1) {
-
-        playTrack(0);
-
-        return;
-
-    }
-
-
-    /*
-     * 暂停状态 → 播放
-     */
-    if (audio.paused) {
-
-        audio.play()
-            .catch(
-                () => {
-
-                    showToast(
-                        "Unable to play this file"
-                    );
-
-                }
-            );
-
-    } else {
-
-        /*
-         * 播放状态 → 暂停
-         */
-        audio.pause();
-
-    }
-
-}
-
-
-/* ========================================================
-   PLAYER CLICK
-======================================================== */
-
-playerSystem.addEventListener(
-    "click",
-    event => {
-
-        /*
-         * seek 完成后吃掉 click
-         */
-        if (suppressNextClick) {
-
-            suppressNextClick =
-                false;
-
-            return;
-
+    function stopAnimations() {
+        if (state.record.animationFrame !== null) {
+            cancelAnimationFrame(state.record.animationFrame);
         }
 
+        state.record.animationFrame = null;
+        state.record.lastAnimationTime = null;
+    }
 
-        /*
-         * 正在拖动时不触发播放
-         */
-        if (isSeeking) {
-
+    function animateRecord(timestamp) {
+        if (!state.isPlaying) {
+            stopAnimations();
             return;
-
         }
 
+        if (state.record.lastAnimationTime === null) {
+            state.record.lastAnimationTime = timestamp;
+        }
 
+        const delta = timestamp - state.record.lastAnimationTime;
+        state.record.lastAnimationTime = timestamp;
+
+        state.record.rotation =
+            (state.record.rotation +
+                config.player.recordRotationSpeed * delta / 1000) % 360;
+
+        applyRecordRotation();
+
+        state.record.animationFrame =
+            requestAnimationFrame(animateRecord);
+    }
+
+    function startRecordAnimation() {
+        if (state.record.animationFrame !== null) return;
+
+        state.record.lastAnimationTime = null;
+        state.record.animationFrame = requestAnimationFrame(animateRecord);
+    }
+
+    function syncVisualState() {
+        player?.classList.toggle("playing", state.isPlaying);
+
+        if (state.isPlaying) {
+            startRecordAnimation();
+            events.emit("progress:start");
+        } else {
+            stopAnimations();
+            events.emit("progress:stop");
+        }
+
+        emitPlaybackChanged();
+    }
+
+    function playTrack(index) {
+        if (!audio || index < 0 || index >= state.tracks.length) return;
+
+        const track = state.tracks[index];
+
+        store.setCurrentIndex(index);
+        state.record.rotation = 0;
+        applyRecordRotation();
+
+        audio.src = track.url;
+
+        if (title) title.textContent = track.title;
+        if (artist) artist.textContent = track.artist;
+
+        events.emit("progress:reset");
+
+        audio.play().catch(() => {
+            utils.showToast("Unable to play this file");
+        });
+    }
+
+    function togglePlay() {
+        if (!state.tracks.length) {
+            utils.showToast("Import some music first");
+            return;
+        }
+
+        if (state.currentIndex === -1) {
+            playTrack(0);
+            return;
+        }
+
+        if (audio.paused) {
+            audio.play().catch(() => {
+                utils.showToast("Unable to play this file");
+            });
+        } else {
+            audio.pause();
+        }
+    }
+
+    function previousTrack() {
+        if (!state.tracks.length) return;
+
+        if (audio.currentTime > 3) {
+            audio.currentTime = 0;
+            events.emit("progress:update");
+            return;
+        }
+
+        const index =
+            state.currentIndex <= 0
+                ? state.tracks.length - 1
+                : state.currentIndex - 1;
+
+        playTrack(index);
+    }
+
+    function nextTrack() {
+        if (!state.tracks.length) return;
+
+        const index =
+            state.currentIndex + 1 >= state.tracks.length
+                ? 0
+                : state.currentIndex + 1;
+
+        playTrack(index);
+    }
+
+    function handlePlayerClick(event) {
+        if (state.seek.suppressNextClick) {
+            state.seek.suppressNextClick = false;
+            return;
+        }
+
+        if (state.seek.active) return;
         togglePlay();
-
     }
-);
 
+    player?.addEventListener("click", handlePlayerClick);
 
-/* ========================================================
-   PREVIOUS
-======================================================== */
-
-prevZone.addEventListener(
-    "click",
-    event => {
-
+    dom.get("prevZone")?.addEventListener("click", event => {
         event.stopPropagation();
-
         previousTrack();
+    });
 
-    }
-);
-
-
-function previousTrack() {
-
-    if (!tracks.length) {
-
-        return;
-
-    }
-
-
-    /*
-     * 当前歌曲已经播放超过 3 秒
-     * → 从头播放
-     */
-    if (
-        audio.currentTime > 3
-    ) {
-
-        audio.currentTime = 0;
-
-
-        updateProgressVisual();
-
-
-        return;
-
-    }
-
-
-    let index =
-        currentIndex - 1;
-
-
-    /*
-     * 循环到最后一首
-     */
-    if (index < 0) {
-
-        index =
-            tracks.length - 1;
-
-    }
-
-
-    playTrack(index);
-
-}
-
-
-/* ========================================================
-   NEXT
-======================================================== */
-
-nextZone.addEventListener(
-    "click",
-    event => {
-
+    dom.get("nextZone")?.addEventListener("click", event => {
         event.stopPropagation();
-
         nextTrack();
-
-    }
-);
-
-
-function nextTrack() {
-
-    if (!tracks.length) {
-
-        return;
-
-    }
-
-
-    let index =
-        currentIndex + 1;
-
-
-    /*
-     * 循环到第一首
-     */
-    if (
-        index >= tracks.length
-    ) {
-
-        index = 0;
-
-    }
-
-
-    playTrack(index);
-
-}
-
-
-/* ========================================================
-   AUDIO EVENTS
-======================================================== */
-
-
-/*
- * 开始播放
- */
-audio.addEventListener(
-    "play",
-    () => {
-
-        isPlaying = true;
-
-        updatePlayingState();
-
-    }
-);
-
-
-/*
- * 暂停
- */
-audio.addEventListener(
-    "pause",
-    () => {
-
-        isPlaying = false;
-
-        updatePlayingState();
-
-    }
-);
-
-
-/*
- * 播放结束
- */
-audio.addEventListener(
-    "ended",
-    () => {
-
-        nextTrack();
-
-    }
-);
-
-
-/*
- * timeupdate 不再直接控制视觉进度。
- *
- * 进度球由 progress.js 的
- * requestAnimationFrame 控制。
- */
-audio.addEventListener(
-    "timeupdate",
-    () => {
-
-        /*
-         * intentionally empty
-         */
-
-    }
-);
-
-
-/* ========================================================
-   RECORD ROTATION
-======================================================== */
-
-
-/*
- * 设置唱片角度
- */
-function applyRecordRotation() {
-
-    record.style.transform =
-        `rotate(${recordRotation}deg)`;
-
-}
-
-
-/*
- * 唱片旋转动画
- */
-function animateRecord(timestamp) {
-
-    /*
-     * 不播放时停止
-     */
-    if (!isPlaying) {
-
-        lastAnimationTime =
-            null;
-
-
-        recordAnimationFrame =
-            null;
-
-
-        return;
-
-    }
-
-
-    /*
-     * 第一帧
-     */
-    if (
-        lastAnimationTime === null
-    ) {
-
-        lastAnimationTime =
-            timestamp;
-
-    }
-
-
-    const delta =
-        timestamp -
-        lastAnimationTime;
-
-
-    lastAnimationTime =
-        timestamp;
-
-
-    /*
-     * 增加角度
-     */
-    recordRotation +=
-        RECORD_ROTATION_SPEED *
-        delta /
-        1000;
-
-
-    /*
-     * 避免数字无限增大
-     */
-    if (
-        recordRotation >=
-        360000
-    ) {
-
-        recordRotation =
-            recordRotation %
-            360;
-
-    }
-
-
-    applyRecordRotation();
-
-
-    /*
-     * 下一帧
-     */
-    recordAnimationFrame =
-        requestAnimationFrame(
-            animateRecord
-        );
-
-}
-
-
-/*
- * 开始唱片动画
- */
-function startRecordAnimation() {
-
-    if (
-        recordAnimationFrame !== null
-    ) {
-
-        return;
-
-    }
-
-
-    lastAnimationTime =
-        null;
-
-
-    recordAnimationFrame =
-        requestAnimationFrame(
-            animateRecord
-        );
-
-}
-
-
-/*
- * 停止唱片动画
- */
-function stopRecordAnimation() {
-
-    if (
-        recordAnimationFrame !== null
-    ) {
-
-        cancelAnimationFrame(
-            recordAnimationFrame
-        );
-
-    }
-
-
-    recordAnimationFrame =
-        null;
-
-
-    lastAnimationTime =
-        null;
-
-
-    /*
-     * 不修改 recordRotation。
-     *
-     * 暂停在哪里，
-     * 唱片就停在哪里。
-     */
-    applyRecordRotation();
-
-}
-
-
-/* ========================================================
-   PLAYING VISUAL STATE
-======================================================== */
-
-function updatePlayingState() {
-
-    playerSystem.classList.toggle(
-        "playing",
-        isPlaying
-    );
-
-
-    if (isPlaying) {
-
-        startRecordAnimation();
-
-        startProgressAnimation();
-
-    } else {
-
-        stopRecordAnimation();
-
-        stopProgressAnimation();
-
-
-        /*
-         * 暂停瞬间再刷新一次
-         */
-        updateProgressVisual();
-
-    }
-
-}
+    });
+
+    audio?.addEventListener("play", () => {
+        store.setPlaying(true);
+        syncVisualState();
+    });
+
+    audio?.addEventListener("pause", () => {
+        store.setPlaying(false);
+        syncVisualState();
+    });
+
+    audio?.addEventListener("ended", nextTrack);
+
+    events.on("track:request", ({ index }) => {
+        if (index === state.currentIndex) {
+            togglePlay();
+        } else {
+            playTrack(index);
+        }
+    });
+
+    events.on("playback:toggle", togglePlay);
+    events.on("playback:next", nextTrack);
+    events.on("playback:previous", previousTrack);
+    events.on("record:rotation", applyRecordRotation);
+
+    Sonora.services.playback = Object.freeze({
+        playTrack,
+        togglePlay,
+        previousTrack,
+        nextTrack,
+        applyRecordRotation
+    });
+})();

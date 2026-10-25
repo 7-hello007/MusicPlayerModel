@@ -1,379 +1,124 @@
-/* ========================================================
-   RECORD SEEK
-======================================================== */
-
-
 /*
- * Pointer Down
+ * SONORA — Seek Feature
+ * Responsibility: pointer-based vinyl seeking.
  */
-record.addEventListener(
-    "pointerdown",
-    event => {
+(() => {
+    "use strict";
+
+    const dom = Sonora.dom;
+    const state = Sonora.state;
+    const events = Sonora.events;
+    const config = Sonora.config;
+    const utils = Sonora.utils;
+
+    const record = dom.get("record");
+    const audio = dom.get("audio");
+
+    function getPointerAngle(event) {
+        if (!record) return 0;
+
+        const rect = record.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+
+        return Math.atan2(
+            event.clientY - centerY,
+            event.clientX - centerX
+        );
+    }
+
+    function begin(event) {
+        if (!record || !audio) return;
 
         event.stopPropagation();
 
+        state.seek.active = true;
+        state.seek.didSeek = false;
+        state.seek.suppressNextClick = false;
 
-        /*
-         * 开始 Seek
-         */
-        isSeeking = true;
+        state.seek.pointerStartX = event.clientX;
+        state.seek.pointerStartY = event.clientY;
+        state.seek.lastPointerAngle = getPointerAngle(event);
+        state.seek.accumulatedAngle = 0;
 
-        didSeek = false;
+        state.seek.startProgress =
+            Number.isFinite(audio.duration) && audio.duration > 0
+                ? audio.currentTime / audio.duration
+                : 0;
 
-        suppressNextClick = false;
+        record.classList.add("dragging");
 
-
-        /*
-         * 保存 Pointer 起点
-         */
-        seekPointerStartX =
-            event.clientX;
-
-
-        seekPointerStartY =
-            event.clientY;
-
-
-        /*
-         * 拖动样式
-         */
-        record.classList.add(
-            "dragging"
-        );
-
-
-        /*
-         * 保存起始角度
-         */
-        const angle =
-            getPointerAngle(event);
-
-
-        lastPointerAngle =
-            angle;
-
-
-        /*
-         * 清零累计角度
-         */
-        seekAccumulatedAngle =
-            0;
-
-
-        /*
-         * 保存开始时的播放进度
-         */
-        seekStartProgress =
-            Number.isFinite(
-                audio.duration
-            )
-            &&
-            audio.duration > 0
-
-                ?
-
-                audio.currentTime /
-                audio.duration
-
-                :
-
-                0;
-
-
-        /*
-         * 尝试捕获 Pointer
-         */
         try {
+            record.setPointerCapture(event.pointerId);
+        } catch (_) {}
+    }
 
-            record.setPointerCapture(
-                event.pointerId
+    function move(event) {
+        if (!state.seek.active || !audio) return;
+
+        if (!state.seek.didSeek) {
+            const dx = event.clientX - state.seek.pointerStartX;
+            const dy = event.clientY - state.seek.pointerStartY;
+            const distance = Math.hypot(dx, dy);
+
+            if (distance < config.player.seekMoveThreshold) return;
+
+            state.seek.didSeek = true;
+        }
+
+        const currentAngle = getPointerAngle(event);
+        let delta = currentAngle - state.seek.lastPointerAngle;
+
+        if (delta > Math.PI) delta -= Math.PI * 2;
+        if (delta < -Math.PI) delta += Math.PI * 2;
+
+        state.seek.accumulatedAngle += delta;
+        state.seek.lastPointerAngle = currentAngle;
+
+        if (!Number.isFinite(audio.duration) || audio.duration <= 0) return;
+
+        const progress =
+            utils.clamp(
+                state.seek.startProgress +
+                state.seek.accumulatedAngle / (Math.PI * 2)
             );
 
+        audio.currentTime = progress * audio.duration;
+
+        state.record.rotation = progress * 360;
+
+        events.emit("record:rotation", {
+            rotation: state.record.rotation
+        });
+
+        events.emit(config.events.PROGRESS_CHANGED, { progress });
+    }
+
+    function finish(event) {
+        if (!state.seek.active || !record) return;
+
+        if (state.seek.didSeek) {
+            state.seek.suppressNextClick = true;
+        }
+
+        state.seek.active = false;
+        record.classList.remove("dragging");
+
+        try {
+            if (record.hasPointerCapture(event.pointerId)) {
+                record.releasePointerCapture(event.pointerId);
+            }
         } catch (_) {}
 
-    }
-);
-
-
-/* ========================================================
-   POINTER MOVE
-======================================================== */
-
-record.addEventListener(
-    "pointermove",
-    event => {
-
-        if (!isSeeking) {
-
-            return;
-
-        }
-
-
-        /*
-         * 判断是否真的开始拖动
-         */
-        if (!didSeek) {
-
-            const dx =
-                event.clientX -
-                seekPointerStartX;
-
-
-            const dy =
-                event.clientY -
-                seekPointerStartY;
-
-
-            const distance =
-                Math.sqrt(
-                    dx * dx +
-                    dy * dy
-                );
-
-
-            /*
-             * 未达到最小移动距离
-             */
-            if (
-                distance <
-                SEEK_MOVE_THRESHOLD
-            ) {
-
-                return;
-
-            }
-
-
-            didSeek = true;
-
-        }
-
-
-        /*
-         * 当前角度
-         */
-        const currentAngle =
-            getPointerAngle(event);
-
-
-        let delta =
-            currentAngle -
-            lastPointerAngle;
-
-
-        /*
-         * 处理 0° / 360° 跨越
-         */
-        if (
-            delta >
-            Math.PI
-        ) {
-
-            delta -=
-                Math.PI * 2;
-
-        }
-
-
-        if (
-            delta <
-            -Math.PI
-        ) {
-
-            delta +=
-                Math.PI * 2;
-
-        }
-
-
-        /*
-         * 累计角度
-         */
-        seekAccumulatedAngle +=
-            delta;
-
-
-        lastPointerAngle =
-            currentAngle;
-
-
-        /*
-         * 没有有效歌曲长度
-         */
-        if (
-            !Number.isFinite(
-                audio.duration
-            )
-            ||
-            audio.duration <= 0
-        ) {
-
-            return;
-
-        }
-
-
-        /*
-         * 一圈 = 一整首歌
-         */
-        const progressDelta =
-            seekAccumulatedAngle /
-            (Math.PI * 2);
-
-
-        let progress =
-            seekStartProgress +
-            progressDelta;
-
-
-        /*
-         * 限制到 0 ~ 1
-         */
-        progress =
-            Math.max(
-                0,
-                Math.min(
-                    1,
-                    progress
-                )
-            );
-
-
-        /*
-         * 设置音频进度
-         */
-        audio.currentTime =
-            progress *
-            audio.duration;
-
-
-        /*
-         * 拖动唱片角度
-         * 与歌曲进度同步
-         */
-        recordRotation =
-            progress * 360;
-
-
-        applyRecordRotation();
-
-
-        /*
-         * 立即刷新进度球
-         */
-        updateProgressVisual();
-
-    }
-);
-
-
-/* ========================================================
-   FINISH SEEK
-======================================================== */
-
-function finishSeek(event) {
-
-    if (!isSeeking) {
-
-        return;
-
+        state.seek.didSeek = false;
     }
 
+    record?.addEventListener("pointerdown", begin);
+    record?.addEventListener("pointermove", move);
+    record?.addEventListener("pointerup", finish);
+    record?.addEventListener("pointercancel", finish);
 
-    /*
-     * 如果真的发生了拖动，
-     * 下一次 click 必须被吃掉。
-     */
-    if (didSeek) {
-
-        suppressNextClick =
-            true;
-
-    }
-
-
-    /*
-     * Seek 结束
-     */
-    isSeeking = false;
-
-
-    record.classList.remove(
-        "dragging"
-    );
-
-
-    /*
-     * 释放 Pointer Capture
-     */
-    try {
-
-        if (
-            record.hasPointerCapture(
-                event.pointerId
-            )
-        ) {
-
-            record.releasePointerCapture(
-                event.pointerId
-            );
-
-        }
-
-    } catch (_) {}
-
-
-    didSeek = false;
-
-}
-
-
-/* ========================================================
-   POINTER UP
-======================================================== */
-
-record.addEventListener(
-    "pointerup",
-    finishSeek
-);
-
-
-/* ========================================================
-   POINTER CANCEL
-======================================================== */
-
-record.addEventListener(
-    "pointercancel",
-    finishSeek
-);
-
-
-/* ========================================================
-   POINTER ANGLE
-======================================================== */
-
-function getPointerAngle(event) {
-
-    const rect =
-        record.getBoundingClientRect();
-
-
-    const centerX =
-        rect.left +
-        rect.width / 2;
-
-
-    const centerY =
-        rect.top +
-        rect.height / 2;
-
-
-    return Math.atan2(
-        event.clientY -
-            centerY,
-        event.clientX -
-            centerX
-    );
-
-}
+    Sonora.services.seek = Object.freeze({
+        getPointerAngle
+    });
+})();

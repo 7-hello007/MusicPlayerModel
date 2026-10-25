@@ -1,134 +1,53 @@
-/* ========================================================
-   MOBILE SWIPE
-======================================================== */
-
-
 /*
- * Touch Start
+ * SONORA — Swipe Feature
+ * Responsibility: horizontal touch navigation.
  */
-playerSystem.addEventListener(
-    "touchstart",
-    event => {
+(() => {
+    "use strict";
 
-        if (!event.touches.length) {
+    const dom = Sonora.dom;
+    const state = Sonora.state;
+    const events = Sonora.events;
 
-            return;
+    const player = dom.get("playerSystem");
+    const record = dom.get("record");
 
-        }
+    const settings = {
+        threshold: 70
+    };
 
+    function start(event) {
+        const touch = event.touches?.[0];
+        if (!touch) return;
 
-        /*
-         * 保存起点
-         */
-        swipeStartX =
-            event.touches[0].clientX;
-
-
-        swipeStartY =
-            event.touches[0].clientY;
-
-
-        /*
-         * 判断是不是从唱片区域开始
-         */
-        swipeFromRecord =
-            event.target.closest(
-                "#record"
-            ) !== null;
-
-    },
-    {
-        passive: true
+        state.swipe.startX = touch.clientX;
+        state.swipe.startY = touch.clientY;
+        state.swipe.fromRecord =
+            Boolean(event.target.closest?.("#record"));
     }
-);
 
+    function end(event) {
+        const touch = event.changedTouches?.[0];
+        if (!touch) return;
 
-/* ========================================================
-   TOUCH END
-======================================================== */
-
-playerSystem.addEventListener(
-    "touchend",
-    event => {
-
-        if (!event.changedTouches.length) {
-
+        if (state.swipe.fromRecord) {
+            state.swipe.fromRecord = false;
             return;
-
         }
 
+        const dx = touch.clientX - state.swipe.startX;
+        const dy = touch.clientY - state.swipe.startY;
 
-        /*
-         * 如果是在唱片区域，
-         * Seek 系统负责处理。
-         */
-        if (swipeFromRecord) {
-
-            swipeFromRecord = false;
-
+        if (Math.abs(dx) <= settings.threshold ||
+            Math.abs(dx) <= Math.abs(dy)) {
             return;
-
         }
 
-
-        /*
-         * 终点
-         */
-        const endX =
-            event.changedTouches[0].clientX;
-
-
-        const endY =
-            event.changedTouches[0].clientY;
-
-
-        /*
-         * 位移
-         */
-        const dx =
-            endX -
-            swipeStartX;
-
-
-        const dy =
-            endY -
-            swipeStartY;
-
-
-        /*
-         * 判断是不是水平滑动
-         */
-        if (
-            Math.abs(dx) > 70
-            &&
-            Math.abs(dx) >
-                Math.abs(dy)
-        ) {
-
-            /*
-             * 左滑
-             * → 下一首
-             */
-            if (dx < 0) {
-
-                nextTrack();
-
-            }
-
-            /*
-             * 右滑
-             * → 上一首
-             */
-            else {
-
-                previousTrack();
-
-            }
-
-        }
-
-    },
-    {
-        passive: true
+        events.emit(
+            dx < 0 ? "playback:next" : "playback:previous"
+        );
     }
-);
+
+    player?.addEventListener("touchstart", start, { passive: true });
+    player?.addEventListener("touchend", end, { passive: true });
+})();
