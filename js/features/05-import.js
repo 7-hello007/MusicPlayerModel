@@ -459,6 +459,7 @@ function importFiles(files) {
     const supportedExtensions = [
 
         ".mp3",
+        ".mp4",
         ".wav",
         ".flac",
         ".m4a",
